@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Directorio hiperlocal "Lugares de la J" — MVP de demostración
+# En producción, quitar las exclusiones de /negocio/*/admin
+Disallow: /negocio/*/admin
