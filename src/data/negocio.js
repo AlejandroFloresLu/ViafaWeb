@@ -36,8 +36,8 @@ export const negocio = {
   google: {
     mapa: 'Viafa Agencia de Viajes, Av. Quitumbe Ñan y Av. Morán Valverde, 170702 Quito', // lo que se busca en Google Maps
     placeId: '',
-    rating: 4.8, // ejemplo
-    resenas: 94, // ejemplo
+    rating: 4.3, // real (Google Maps, nov 2026)
+    resenas: 24, // real (Google Maps, nov 2026)
   },
 
   fotos: {
