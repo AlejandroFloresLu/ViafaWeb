@@ -31,10 +31,10 @@ export const negocio = {
   whatsapp: '593969725577', // WhatsApp 0969 725 577 (aparece en su banner)
   email: 'info@viafaecuador.com.ec',
   instagram: '@viafaecuador', // 👉 confirmar (en su web solo aparece Facebook)
-  direccion: 'C.C. Quicentro Sur, local 51, planta baja',
+  direccion: 'Av. Quitumbe Ñan y Av. Morán Valverde · C.C. Quicentro Sur, local 51, planta baja',
 
   google: {
-    mapa: 'Centro Comercial Quicentro Sur, Quito, Ecuador',
+    mapa: 'Viafa Agencia de Viajes, Av. Quitumbe Ñan y Av. Morán Valverde, 170702 Quito', // lo que se busca en Google Maps
     placeId: '',
     rating: 4.8, // ejemplo
     resenas: 94, // ejemplo
