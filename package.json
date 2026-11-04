@@ -6,8 +6,7 @@
   "description": "Demo de rediseño web para Viafa Agencia de Viajes",
   "scripts": {
     "dev": "vite",
-    "dev:5190": "vite --port 5190 --strictPort",
-    "build": "vite build",
+    "build": "vite build && node -e \"const f=require('fs');f.copyFileSync('dist/app.html','index.html');f.copyFileSync('dist/app.html','viafa-demo.html')\"",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -3,13 +3,16 @@
 Rediseño de la web de Viafa con el mismo formato que Lugares de la J y **los colores de la marca**
 (sacados de su logo): azul rey `#0A0A98`, naranja `#F7941D` y azul mar `#0A6898`.
 
+## En línea
+https://alejandrofloreslu.github.io/ViafaWeb/
+
 ## Verlo rápido (sin instalar nada)
 Abre **`viafa-demo.html`** con doble clic. Necesita internet para las fotos y el mapa.
 
 ## Verlo en localhost (y en el celular)
 ```bash
 npm install     # solo la primera vez
-npm run dev     # abre http://localhost:5173
+npm run dev     # abre http://localhost:5173/app.html
 ```
 En el celular (mismo wifi), abre la dirección **Network** que aparece en la consola.
 
@@ -29,4 +32,6 @@ En el panel, **"reiniciar demo"** borra lo publicado.
   testimonios, métricas del panel, publicaciones y los destinos Galápagos y Cancún.
 
 Todo el contenido se edita en `src/data/negocio.js`. Los colores, en `src/index.css`.
-`npm run build` vuelve a generar el archivo único en `dist/index.html`.
+Después de editar, corre `npm run build`: actualiza `index.html` (la página en línea) y `viafa-demo.html`.
+Sube los cambios a `main` y GitHub Pages se actualiza solo en 1–2 minutos.
+El código fuente entra por `app.html`; no edites `index.html` a mano.
