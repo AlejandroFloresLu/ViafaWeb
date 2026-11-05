@@ -20,7 +20,7 @@ export const COLECCIONES = {
     tabla: 'favoritos',
     carpeta: 'favoritos',
     titulo: 'lugares favoritos.',
-    texto: 'las ofertas detalladas del inicio ("los más vendidos"). lo ideal son 3 o 6. las 3 primeras llevan la etiqueta "más vendido".',
+    texto: 'las ofertas detalladas del inicio. lo ideal son 3 o 6. en la tarjeta la descripción se ve en 2 líneas: lo importante, primero.',
     nuevo: 'nuevo favorito',
     aspecto: 'aspect-[16/10]',
     campos: [
@@ -32,7 +32,7 @@ export const COLECCIONES = {
       { k: 'noches', label: 'duración (noches)', tipo: 'number', maxNum: 60, ej: '4', mitad: true },
       { k: 'salida', label: 'ciudad de salida', max: 40, ej: 'quito y guayaquil', mitad: true },
       { k: 'aerolinea', label: 'aerolínea', max: 30, ej: 'copa airlines' },
-      { k: 'descripcion', label: 'descripción', tipo: 'textarea', max: 240, ej: 'escápate a punta cana con un viaje todo incluido…' },
+      { k: 'descripcion', label: 'descripción (se ven ~2 líneas)', tipo: 'textarea', max: 160, ej: 'escápate a punta cana con un viaje todo incluido…' },
       { k: 'incluye', label: 'el paquete incluye', tipo: 'multi', opciones: INCLUYE },
     ],
     resumen: (f) => [f.noches > 0 ? `${f.noches} noches` : null, f.tipo, f.precio > 0 ? `desde ${precio(f.precio)}` : null].filter(Boolean).join(' · '),

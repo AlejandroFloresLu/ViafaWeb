@@ -106,12 +106,12 @@ export function Web() {
 
       {/* Lugares favoritos: tarjetas detalladas (las edita el gerente en /admin) */}
       {favoritos.length > 0 && (
-        <section id="favoritos" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-20 sm:px-8 sm:pt-28">
-          <p className="eyebrow text-ink-3">los más vendidos</p>
-          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">lugares favoritos.</h2>
-          <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {favoritos.map((f, i) => (
-              <TarjetaFavorito key={f.id} f={f} posicion={i < 3 ? i + 1 : null} destino={paginaDe(f)} />
+        <section id="favoritos" className="mx-auto mt-20 max-w-6xl scroll-mt-24 px-5 sm:mt-24 sm:px-8">
+          <p className="eyebrow text-ink-3">nuestras ofertas</p>
+          <h2 className="mt-1 text-[32px] font-medium tracking-[-0.02em] sm:text-[38px]">lugares favoritos.</h2>
+          <div className="mt-6 grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {favoritos.map((f) => (
+              <TarjetaFavorito key={f.id} f={f} destino={paginaDe(f)} />
             ))}
           </div>
           {MOSTRAR_DESTINOS && (
