@@ -7,7 +7,7 @@
 | **Repositorio** | https://github.com/AlejandroFloresLu/ViafaWeb (rama `main`) |
 | **Vista previa** | https://alejandrofloreslu.github.io/ViafaWeb/ |
 | **Desarrollador** | Alejandro Flores (flores.alejandro10moc@gmail.com) |
-| **Versión** | 1.0 · noviembre 2026 · lista para producción |
+| **Versión** | 1.1 · 5 de noviembre de 2026 · se agregó la revisión del hosting (§14) |
 | **Para** | revisión técnica antes de publicar en el dominio |
 
 ---
@@ -267,7 +267,9 @@ Si se prefiere **privado**: el despliegue FTP sigue funcionando igual; solo se p
 ## 10. Migración desde Joomla (paso a paso)
 
 **Tiempo estimado:** 30–45 min. **Ventana sugerida:** fuera del horario de atención.
-**Requisitos:** acceso a cPanel (https://cpanel.viafaecuador.com.ec), Supabase configurado (§8), secretos en GitHub (§9.3).
+**Requisitos:** acceso a cPanel (https://cpanel.viafaecuador.com.ec), base de datos lista (§8 o §14.4), secretos en GitHub (§9.3).
+
+> Atajo para el respaldo: **JetBackup 5** (cPanel → Archivos) ya tiene respaldos automáticos; antes de empezar se puede crear uno con *Create Backup On Demand* y descargarlo.
 
 | # | Paso | Detalle | Verificación |
 |---|---|---|---|
@@ -360,13 +362,79 @@ await fetch(SUPABASE_URL + '/rest/v1/favoritos', { method: 'POST', headers: { ap
 
 ---
 
-## 14. Datos del hosting y dominio (referencia)
+## 14. Hosting (cPanel) — revisión del 5 de noviembre de 2026
+
+Revisión **solo de lectura** del cPanel (no se cambió nada). Las credenciales de cPanel **no** se guardan en este
+documento ni en el repositorio (el repo es público): las custodia Viafa.
+
+### 14.1 Datos del servidor
 
 | | |
 |---|---|
-| Servidor | `kondor.globalhost1.com` · IP 74.50.95.214 · Interserver (NJ, EE. UU.) · LiteSpeed |
+| Panel | https://cpanel.viafaecuador.com.ec (cPanel, tema Jupiter, CloudLinux) |
+| Servidor | `kondor.globalhost1.com` · IP compartida 74.50.95.214 · Interserver (NJ, EE. UU.) · LiteSpeed |
+| Directorio principal | `/home/<usuario-cpanel>` → web en `public_html/` |
+| SSL | **Activo** para `viafaecuador.com.ec` |
+| PHP en uso | **7.4** (definido en *Seleccionar Versión PHP* de CloudLinux; está obsoleto). MultiPHP muestra 8.1 y hay disponibles **8.0 a 8.4** |
+| Extensiones PHP | `pdo_mysql`, `mysqli`, `gd`, `imagick`, `fileinfo`, `json`, `mbstring`, `openssl`, `session`, `zip` disponibles |
+| Herramientas útiles | phpMyAdmin, **Git™ Version Control**, **JetBackup 5**, Trabajos de cron, Acceso SSH, ModSecurity, Imunify360, LiteSpeed Cache |
+| FTP | `ftp.viafaecuador.com.ec`, FTPS explícito. Cuentas existentes: `ale@` → `/ale` y `viafa@` → `/viafa` (ninguna apunta a `public_html`); se creará una dedicada |
+| Respaldos | JetBackup 5 con **19 respaldos** automáticos disponibles (1,4 GB): completos, archivos, bases, correo, DNS, SSL |
+| Correo | 11 cuentas y 6 reenviadores. **No se tocan** en la migración |
+
+### 14.2 Capacidad (uso actual vs. límite)
+
+| Recurso | Usado | Límite | Uso | ¿Alcanza? |
+|---|---|---|---|---|
+| Disco | 1,38 GB | 20 GB | 7 % | ✅ Sobra. El correo ocupa 1,25 GB; la web Joomla 282 MB |
+| Inodos (archivos) | 34.734 | 350.000 | 10 % | ✅ |
+| Ancho de banda (mes) | 177 MB | 200 GB | 0,1 % | ✅ |
+| Memoria física | 4,5 MB | 2 GB | 0,2 % | ✅ |
+| Procesos / entrantes | 1 / 1 | 35 / 20 | < 5 % | ✅ |
+| CPU · IOPS · I/O | 0 % | 100 % · 1.024 · 3 MB/s | 0 % | ✅ |
+| Espacio de bases de datos | 27 MB | 18,65 GB | 0,1 % | ✅ |
+| **Cantidad de bases MySQL** | **2** | **2** | **100 %** | ⚠️ **No se puede crear otra** |
+| Cuentas FTP, correo, subdominios | — | ilimitado | — | ✅ |
+
+**Conclusión:** el hosting tiene espacio y recursos de sobra para la web nueva. La web compilada pesa ~0,3 MB y,
+aun con cientos de fotos del panel (~200–400 KB cada una, ya redimensionadas), se usarían pocos cientos de MB.
+El único límite es la **cantidad de bases de datos**.
+
+### 14.3 Bases de datos existentes
+
+| Base | Tamaño | Uso probable |
+|---|---|---|
+| `jonrprja_2019` | 27 MB | Base del sitio **Joomla actual**. No tocar hasta terminar y verificar la migración |
+| `jonrprja_2024` | **0 bytes (vacía)** | Sin uso aparente |
+
+Usuarios MySQL existentes: `jonrprja_2019`, `jonrprja_2024`, `jonrprja_joom413`. Los usuarios no cuentan para el límite.
+
+### 14.4 Si la base de datos va en cPanel (en lugar de Supabase)
+
+Como no se puede crear una tercera base, hay tres caminos (de más a menos recomendado):
+
+1. **Usar `jonrprja_2024`**, que está vacía, con un **usuario MySQL nuevo** solo para la web
+   (privilegios: SELECT, INSERT, UPDATE, DELETE). Antes, confirmar con Viafa que nadie la usa.
+2. **Después de la migración**, respaldar y liberar `jonrprja_2019` (Joomla) para dejar un cupo libre.
+   Recién cuando la web nueva lleve 1–2 meses estable.
+3. Pedir a Interserver que **aumente el límite** de bases.
+
+Consideraciones si se elige cPanel:
+- Subir PHP a **8.2 o 8.3** en *Seleccionar Versión PHP* después de apartar Joomla: la versión 7.4 está obsoleta,
+  y el Joomla actual podría no funcionar con 8.x, así que conviene cambiarla solo una vez que Joomla ya no esté en uso.
+- Las fotos del panel irían en `public_html/fotos/`. El despliegue por FTP **no debe borrar esa carpeta**:
+  la acción solo elimina archivos que ella misma subió, pero se excluirá `fotos/**` explícitamente.
+- La vista previa de GitHub Pages solo mostraría datos de ejemplo (GitHub no ejecuta PHP).
+
+---
+
+## 15. Dominio (referencia)
+
+| | |
+|---|---|
+| Titular | Santiago Hidalgo |
+| Contacto administrativo | Alejandra Cuesta (Cuesta Comunicación Total) |
+| Registrador | Dominios Ecuador |
+| Vence | 2028-06-16 · bloqueo de transferencia activo |
 | Sitio anterior | Joomla (PHP 7.4) |
-| cPanel | https://cpanel.viafaecuador.com.ec |
-| FTP | `ftp.viafaecuador.com.ec` |
 | Webmail | https://webmail.viafaecuador.com.ec (no se modifica) |
-| Dominio | Titular: Santiago Hidalgo · Contacto admin.: Alejandra Cuesta (Cuesta Comunicación Total) · Registrador: Dominios Ecuador · vence 2028-06-16 |
