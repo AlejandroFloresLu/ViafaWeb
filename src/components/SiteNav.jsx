@@ -41,7 +41,7 @@ export function SiteNav() {
   const enlace = 'text-[13px] uppercase tracking-[0.12em] opacity-90 hover:opacity-100'
 
   return (
-    <nav ref={cajaRef} className="sticky top-0 z-30 bg-white text-olive shadow-[0_8px_18px_-6px_rgba(255,255,255,0.95)]">
+    <nav ref={cajaRef} className="sticky top-0 z-30 bg-white text-olive shadow-[0_10px_24px_-8px_rgba(0,0,0,0.45)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 sm:px-8">
         <Link to="/web" aria-label={`${negocio.nombreLargo} · inicio`} className="shrink-0">
           <img src={logo} alt="Viafa Agencia de Viajes" className="h-11 w-auto sm:h-[52px]" />
