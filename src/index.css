@@ -78,3 +78,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .brillo { animation: none; display: none; }
 }
+
+/* Carril de lugares favoritos: desplazable sin barra visible */
+.carril {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.carril::-webkit-scrollbar {
+  display: none;
+}

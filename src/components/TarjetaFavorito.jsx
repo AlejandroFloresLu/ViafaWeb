@@ -38,13 +38,13 @@ export function TarjetaFavorito({ f, destino }) {
   )
 
   return (
-    <article className="flex flex-col bg-white ring-1 ring-line">
-      <div className="group relative aspect-[2/1] overflow-hidden bg-paper-3">
+    <article className="flex w-full flex-col bg-white ring-1 ring-line">
+      <div className="group relative aspect-[16/9] overflow-hidden bg-paper-3 [@media(max-height:800px)_and_(min-width:768px)]:aspect-[2/1]">
         <img onError={sinFoto} src={f.foto} alt={f.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
       </div>
 
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
-        <h3 className="text-[16px] font-semibold uppercase leading-snug text-ink">{f.nombre}</h3>
+        <h3 className="text-[17px] font-semibold uppercase leading-snug text-ink">{f.nombre}</h3>
 
         <div className="mt-2 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div className="min-w-0">
@@ -66,7 +66,7 @@ export function TarjetaFavorito({ f, destino }) {
         </div>
 
         {datos.length > 0 && (
-          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px]">
+          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] lg:flex lg:flex-wrap lg:gap-x-5">
             {datos.map(({ icono: Icono, label, valor }) => (
               <div key={label} className="flex min-w-0 items-center gap-1.5">
                 <dt className="shrink-0 text-ink-3" title={label}>
