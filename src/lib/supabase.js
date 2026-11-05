@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config'
+import { crearSupabaseSimulado } from './supabaseSimulado'
 
-/* Cliente de Supabase. Es null mientras no se configure en src/config.js. */
-export const supabase =
-  SUPABASE_URL && SUPABASE_ANON_KEY
+/* true solo en la versión de prueba (npm run simulacion → viafa-simulacion.html) */
+export const SIMULACION = import.meta.env.VITE_SIMULACION === '1'
+
+/* Cliente de Supabase. Es null mientras no se configure en src/config.js.
+   En la simulación se usa una base falsa guardada en el navegador. */
+export const supabase = SIMULACION
+  ? crearSupabaseSimulado()
+  : SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
       })

@@ -4,6 +4,8 @@ import { PublicacionesProvider } from './lib/publicaciones'
 import { ContenidoProvider } from './lib/contenido'
 import { DemoBar } from './components/DemoBar'
 import { MOSTRAR_DEMO, MOSTRAR_DESTINOS } from './config'
+import { SIMULACION } from './lib/supabase'
+import { reiniciarSimulacion } from './lib/supabaseSimulado'
 import { Web } from './views/Web'
 import { Panel } from './views/Panel'
 import { Publicar } from './views/Publicar'
@@ -31,6 +33,20 @@ function ScrollArriba() {
     if (!search.includes('nuevo')) window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname, search])
   return null
+}
+
+/* Barra fija solo en la versión de prueba del panel */
+function BarraSimulacion() {
+  const { pathname } = useLocation()
+  const enAdmin = pathname.startsWith('/admin')
+  return (
+    <div className="fixed bottom-3 left-1/2 z-[60] flex w-max max-w-[calc(100vw-24px)] -translate-x-1/2 flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-full bg-sun px-5 py-2 text-[12px] font-medium text-ink shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
+      <span className="font-semibold uppercase tracking-[0.12em]">simulación</span>
+      <span className="hidden sm:inline">se guarda solo en este navegador · usuario admin / clave admin</span>
+      <a href={enAdmin ? '#/web' : '#/admin'} className="underline underline-offset-2">{enAdmin ? 'ver la web' : 'ir al panel /admin'}</a>
+      <button type="button" onClick={reiniciarSimulacion} className="underline underline-offset-2">reiniciar</button>
+    </div>
+  )
 }
 
 export default function App() {
@@ -63,6 +79,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/web" replace />} />
           </Routes>
           {MOSTRAR_DEMO && <DemoBar />}
+          {SIMULACION && <BarraSimulacion />}
         </PublicacionesProvider>
       </ContenidoProvider>
     </HashRouter>

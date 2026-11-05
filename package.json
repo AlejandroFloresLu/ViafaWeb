@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"const f=require('fs');f.copyFileSync('dist/app.html','index.html');f.copyFileSync('dist/app.html','viafa-demo.html');f.mkdirSync('admin',{recursive:true});f.copyFileSync('public/admin/index.html','admin/index.html')\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "simulacion": "VITE_SIMULACION=1 vite build --outDir dist-sim && node -e \"require('fs').copyFileSync('dist-sim/app.html','viafa-simulacion.html')\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
