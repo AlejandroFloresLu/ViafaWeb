@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState } from 'react'
+import { favoritosEjemplo } from '../data/favoritos'
 import { negocio, publicacionesIniciales } from '../data/negocio'
 import { sitios } from '../data/sitios'
 import { supabase } from './supabase'
@@ -61,10 +62,12 @@ export const aPromo = (p) => ({
 
 export const aDia = (h) => ({ indice: h.dia_idx, dia: h.dia, abre: h.abre, cierra: h.cierra, cerrado: h.cerrado })
 
-/* "Los favoritos de Quito" (tarjetas del inicio) */
+/* "Lugares favoritos" (tarjetas detalladas del inicio) */
 export const aFavorito = (f) => ({
-  uuid: f.id, id: f.id, nombre: f.nombre, region: f.region, detalle: f.detalle,
-  precio: Number(f.precio), foto: f.foto, orden: f.orden, visible: f.visible,
+  uuid: f.id, id: f.id, nombre: f.nombre, salidas: f.salidas || '', estrellas: Number(f.estrellas) || 0,
+  precio: Number(f.precio) || 0, tipo: f.tipo || '', noches: Number(f.noches) || 0, salida: f.salida || '',
+  aerolinea: f.aerolinea || '', descripcion: f.descripcion || '', incluye: f.incluye || [],
+  foto: f.foto, orden: f.orden, visible: f.visible,
 })
 /* "Lugares que visitó Viafa" (collage) */
 export const aViaje = (g) => ({ uuid: g.id, id: g.id, lugar: g.lugar, foto: g.foto, orden: g.orden, visible: g.visible })
@@ -75,7 +78,7 @@ export const aTestimonio = (t) => ({
 
 const local = {
   destinos: negocio.carta.map((d) => ({ ...d, sitios: sitios[d.id] || [] })),
-  favoritos: negocio.carta.filter((d) => d.masVendido),
+  favoritos: favoritosEjemplo,
   galeriaViajes: negocio.galeriaViajes.map((g, i) => ({ id: `g${i}`, ...g })),
   testimonios: negocio.referencias.map((r, i) => ({ id: `t${i}`, ...r })),
   promociones: publicacionesIniciales,

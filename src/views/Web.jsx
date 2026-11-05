@@ -8,6 +8,7 @@ import { useContenido } from '../lib/contenido'
 import { PostCard } from '../components/PostCard'
 import { SiteNav } from '../components/SiteNav'
 import { SiteFooter } from '../components/SiteFooter'
+import { TarjetaFavorito } from '../components/TarjetaFavorito'
 import { useBajarASeccion, useIrA } from '../lib/navegacion'
 import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, precio, whatsapp } from '../lib/utils'
 
@@ -103,39 +104,15 @@ export function Web() {
         </div>
       </section>
 
-      {/* Los favoritos de Quito (los edita el gerente en /admin) */}
+      {/* Lugares favoritos: tarjetas detalladas (las edita el gerente en /admin) */}
       {favoritos.length > 0 && (
         <section id="favoritos" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-20 sm:px-8 sm:pt-28">
           <p className="eyebrow text-ink-3">los más vendidos</p>
-          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">los favoritos de quito.</h2>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {favoritos.map((f, i) => {
-              const destino = paginaDe(f)
-              const contenido = (
-                <>
-                  <img onError={sinFoto} src={f.foto} alt={f.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                  <span className="absolute left-4 top-4 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">#{i + 1} más vendido</span>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-paper">
-                    {f.region && <p className="eyebrow text-paper/75">{f.region}</p>}
-                    <p className="mt-2 text-[28px] font-medium leading-tight tracking-[-0.02em]">{f.nombre}</p>
-                    {f.detalle && <p className="mt-1 text-[13px] text-paper/80">{f.detalle}</p>}
-                    <p className="mt-4 flex items-center justify-between gap-3">
-                      {f.precio > 0 ? <span className="text-[14px]">desde <span className="text-[22px] font-medium">{precio(f.precio)}</span></span> : <span />}
-                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em]">
-                        {destino ? 'ver destino' : 'cotizar'} <ArrowRight size={14} />
-                      </span>
-                    </p>
-                  </div>
-                </>
-              )
-              const clase = 'group relative min-h-[420px] overflow-hidden bg-paper-3'
-              return destino ? (
-                <Link key={f.id} to={`/destinos/${destino.id}`} className={clase}>{contenido}</Link>
-              ) : (
-                <a key={f.id} href={cotizar(f.nombre)} target="_blank" rel="noreferrer" className={clase}>{contenido}</a>
-              )
-            })}
+          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">lugares favoritos.</h2>
+          <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {favoritos.map((f, i) => (
+              <TarjetaFavorito key={f.id} f={f} posicion={i < 3 ? i + 1 : null} destino={paginaDe(f)} />
+            ))}
           </div>
           {MOSTRAR_DESTINOS && (
             <Link to="/destinos" className="mt-8 inline-flex items-center gap-2 border-b border-ink/30 pb-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] hover:border-ink">

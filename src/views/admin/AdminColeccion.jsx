@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, Eye, EyeOff, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { INCLUYE, TIPOS } from '../../data/favoritos'
 import { borrarFoto, supabase } from '../../lib/supabase'
 import { LIMITES } from '../../config'
 import { precio } from '../../lib/utils'
@@ -7,7 +8,7 @@ import { Aviso, SelectorFoto, Titulo, campo } from './comun'
 
 /* ==========================================================================
    EDITOR GENÉRICO DE UNA COLECCIÓN DE TARJETAS CON FOTO
-   Sirve para "los favoritos de quito", "lugares que visitó viafa" y
+   Sirve para "lugares favoritos", "lugares que visitó viafa" y
    "esto dicen nuestros clientes". El gerente puede crear, modificar,
    ocultar, reordenar (subir/bajar) y eliminar. El DISEÑO no se edita aquí:
    solo fotos y textos.
@@ -18,17 +19,23 @@ export const COLECCIONES = {
   favoritos: {
     tabla: 'favoritos',
     carpeta: 'favoritos',
-    titulo: 'los favoritos de quito.',
-    texto: 'las tarjetas de "los más vendidos" del inicio. lo ideal son 3 (o 6).',
+    titulo: 'lugares favoritos.',
+    texto: 'las ofertas detalladas del inicio ("los más vendidos"). lo ideal son 3 o 6. las 3 primeras llevan la etiqueta "más vendido".',
     nuevo: 'nuevo favorito',
-    aspecto: 'aspect-[3/4]',
+    aspecto: 'aspect-[16/10]',
     campos: [
-      { k: 'nombre', label: 'destino', req: true, max: 40, ej: 'punta cana' },
-      { k: 'region', label: 'región', max: 30, ej: 'caribe' },
-      { k: 'detalle', label: 'detalle corto', max: 80, ej: '5 días · 4 noches · todo incluido' },
-      { k: 'precio', label: 'precio desde (USD)', tipo: 'number', maxNum: 99999, ej: '899' },
+      { k: 'nombre', label: 'título de la oferta', req: true, max: 60, ej: 'tour a punta cana desde quito' },
+      { k: 'salidas', label: 'salidas / fechas', max: 50, ej: 'salidas 2026 · septiembre a diciembre', mitad: true },
+      { k: 'precio', label: 'precio desde (USD)', tipo: 'number', maxNum: 99999, ej: '1149', mitad: true },
+      { k: 'tipo', label: 'tipo de viaje', tipo: 'select', opciones: TIPOS, mitad: true },
+      { k: 'estrellas', label: 'categoría del hotel', tipo: 'select', opciones: [['0', 'sin estrellas'], ['1', '★'], ['2', '★★'], ['3', '★★★'], ['4', '★★★★'], ['5', '★★★★★']], numero: true, mitad: true },
+      { k: 'noches', label: 'duración (noches)', tipo: 'number', maxNum: 60, ej: '4', mitad: true },
+      { k: 'salida', label: 'ciudad de salida', max: 40, ej: 'quito y guayaquil', mitad: true },
+      { k: 'aerolinea', label: 'aerolínea', max: 30, ej: 'copa airlines' },
+      { k: 'descripcion', label: 'descripción', tipo: 'textarea', max: 240, ej: 'escápate a punta cana con un viaje todo incluido…' },
+      { k: 'incluye', label: 'el paquete incluye', tipo: 'multi', opciones: INCLUYE },
     ],
-    resumen: (f) => [f.region, f.precio > 0 ? `desde ${precio(f.precio)}` : null].filter(Boolean).join(' · '),
+    resumen: (f) => [f.noches > 0 ? `${f.noches} noches` : null, f.tipo, f.precio > 0 ? `desde ${precio(f.precio)}` : null].filter(Boolean).join(' · '),
     nombre: (f) => f.nombre,
   },
   viajes: {
@@ -59,7 +66,8 @@ export const COLECCIONES = {
   },
 }
 
-const vacio = (cfg) => Object.fromEntries([['foto', ''], ...cfg.campos.map((c) => [c.k, ''])])
+const vacio = (cfg) =>
+  Object.fromEntries([['foto', ''], ...cfg.campos.map((c) => [c.k, c.tipo === 'multi' ? [] : c.tipo === 'select' ? String(c.opciones[0]?.[0] ?? c.opciones[0] ?? '') : ''])])
 
 export function AdminColeccion({ tipo }) {
   const cfg = COLECCIONES[tipo]
@@ -108,11 +116,15 @@ export function AdminColeccion({ tipo }) {
     if (!form.foto) return setAviso({ tipo: 'error', texto: 'falta la foto.' })
     const fila = { foto: form.foto }
     for (const c of cfg.campos) {
+      if (c.tipo === 'multi') {
+        fila[c.k] = c.opciones.map((o) => o.id).filter((id) => (form[c.k] || []).includes(id))
+        continue
+      }
       const v = String(form[c.k] ?? '').trim()
       if (c.req && !v) return setAviso({ tipo: 'error', texto: `falta: ${c.label}.` })
       if (c.max && v.length > c.max) return setAviso({ tipo: 'error', texto: `${c.label}: máximo ${c.max} caracteres.` })
       if (c.maxNum && Number(v) > c.maxNum) return setAviso({ tipo: 'error', texto: `${c.label}: máximo ${c.maxNum}.` })
-      fila[c.k] = c.tipo === 'number' ? Number(v) || 0 : v
+      fila[c.k] = c.tipo === 'number' || c.numero ? Number(v) || 0 : v
     }
     if (!form.id && lleno) return setAviso({ tipo: 'error', texto: `ya hay ${limite}, el máximo. elimina uno antes de agregar otro.` })
     setGuardando(true)
@@ -179,19 +191,50 @@ export function AdminColeccion({ tipo }) {
           <SelectorFoto valor={form.foto} onCambio={cambiarFoto} carpeta={cfg.carpeta} aspecto={cfg.aspecto} alt="Foto" />
           <div className="space-y-4">
             <p className="text-[15px] font-medium">{form.id ? 'modificar' : cfg.nuevo}</p>
-            {cfg.campos.map((c) => (
-              <label key={c.k} className="block">
-                <span className="flex justify-between text-[13px] text-ink-2">
-                  {c.label}
-                  {c.max && <span className="text-ink-3">{String(form[c.k] ?? '').length}/{c.max}</span>}
-                </span>
-                {c.tipo === 'textarea' ? (
-                  <textarea rows={4} maxLength={c.max} value={form[c.k] ?? ''} onChange={set(c.k)} placeholder={c.ej} className={`${campo} py-3 leading-relaxed`} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {cfg.campos.map((c) =>
+                c.tipo === 'multi' ? (
+                  <fieldset key={c.k} className="sm:col-span-2">
+                    <legend className="text-[13px] text-ink-2">{c.label}</legend>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {c.opciones.map((o) => {
+                        const activo = (form[c.k] || []).includes(o.id)
+                        return (
+                          <button
+                            key={o.id}
+                            type="button"
+                            aria-pressed={activo}
+                            onClick={() => setForm((f) => ({ ...f, [c.k]: activo ? (f[c.k] || []).filter((x) => x !== o.id) : [...(f[c.k] || []), o.id] }))}
+                            className={`inline-flex h-10 items-center gap-1.5 border px-3 text-[13px] ${activo ? 'border-ink bg-ink text-paper' : 'border-line bg-white text-ink-2 hover:border-ink'}`}
+                          >
+                            {activo && <Check size={14} />} {o.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </fieldset>
                 ) : (
-                  <input type={c.tipo === 'number' ? 'number' : 'text'} min={c.tipo === 'number' ? 0 : undefined} max={c.maxNum} maxLength={c.max} value={form[c.k] ?? ''} onChange={set(c.k)} placeholder={c.ej} className={`${campo} h-12`} />
-                )}
-              </label>
-            ))}
+                  <label key={c.k} className={`block ${c.mitad ? '' : 'sm:col-span-2'}`}>
+                    <span className="flex justify-between text-[13px] text-ink-2">
+                      {c.label}
+                      {c.max && <span className="text-ink-3">{String(form[c.k] ?? '').length}/{c.max}</span>}
+                    </span>
+                    {c.tipo === 'textarea' ? (
+                      <textarea rows={4} maxLength={c.max} value={form[c.k] ?? ''} onChange={set(c.k)} placeholder={c.ej} className={`${campo} py-3 leading-relaxed`} />
+                    ) : c.tipo === 'select' ? (
+                      <select value={String(form[c.k] ?? '')} onChange={set(c.k)} className={`${campo} h-12`}>
+                        {c.opciones.map((o) => {
+                          const [v, t] = Array.isArray(o) ? o : [o, o]
+                          return <option key={v} value={v}>{t}</option>
+                        })}
+                      </select>
+                    ) : (
+                      <input type={c.tipo === 'number' ? 'number' : 'text'} min={c.tipo === 'number' ? 0 : undefined} max={c.maxNum} maxLength={c.max} value={form[c.k] ?? ''} onChange={set(c.k)} placeholder={c.ej} className={`${campo} h-12`} />
+                    )}
+                  </label>
+                ),
+              )}
+            </div>
             <div className="flex flex-wrap gap-3 pt-1">
               <button type="submit" disabled={guardando} className="h-11 bg-ink px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-paper hover:bg-olive disabled:opacity-50">
                 {guardando ? 'guardando…' : 'guardar'}

@@ -21,7 +21,7 @@ export function SiteFooter() {
           {MOSTRAR_DESTINOS ? (
             <Link to="/destinos" className={boton}>destinos</Link>
           ) : (
-            <button type="button" onClick={() => irA('favoritos')} className={boton}>los favoritos</button>
+            <button type="button" onClick={() => irA('favoritos')} className={boton}>lugares favoritos</button>
           )}
           {MOSTRAR_PROMOCIONES && <button type="button" onClick={() => irA('promociones')} className={boton}>promociones</button>}
           <button type="button" onClick={() => irA('viajes')} className={boton}>lugares que visitamos</button>

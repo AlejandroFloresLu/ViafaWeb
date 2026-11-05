@@ -1,4 +1,5 @@
 import { negocio } from '../data/negocio'
+import { favoritosEjemplo } from '../data/favoritos'
 
 /* ==========================================================================
    SUPABASE SIMULADO — solo para la versión de prueba (npm run simulacion)
@@ -7,7 +8,7 @@ import { negocio } from '../data/negocio'
    Usuario: admin · clave: admin (se puede cambiar en "mi cuenta").
    ========================================================================== */
 
-const CLAVE_LS = 'viafa-simulacion-v1'
+const CLAVE_LS = 'viafa-simulacion-v2'
 const ahora = () => new Date().toISOString()
 const nuevoId = () => Math.random().toString(36).slice(2, 10)
 
@@ -17,9 +18,7 @@ function semilla() {
     usuarios: { 'admin@viafaecuador.com.ec': { clave: 'admin::viafa', meta: {} } },
     fotos: {},
     tablas: {
-      favoritos: negocio.carta
-        .filter((d) => d.masVendido)
-        .map((d, i) => fila({ nombre: d.nombre, region: d.region, detalle: d.detalle, precio: d.precio, foto: d.foto }, i)),
+      favoritos: favoritosEjemplo.map(({ id, ...f }, i) => fila(f, i)),
       viajes_galeria: negocio.galeriaViajes.map((g, i) => fila({ lugar: g.lugar, foto: g.foto }, i)),
       testimonios: negocio.referencias.map((t, i) => fila({ autor: t.autor, viaje: t.viaje, texto: t.texto, foto: t.foto }, i)),
       horario: negocio.horario.map((h, i) => ({ dia_idx: i, dia: h.dia, abre: h.abre, cierra: h.cierra, cerrado: !!h.cerrado })),

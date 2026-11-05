@@ -44,7 +44,7 @@ export const CLAVE_SUFIJO = '::viafa'
    también lo bloquea (supabase/esquema.sql), así que no se pueden saltar.
    Si los cambias, cambia también los números en esquema.sql. */
 export const LIMITES = {
-  favoritos: 6, // tarjetas de "los favoritos de quito"
+  favoritos: 6, // tarjetas de "lugares favoritos"
   viajes: 24, //   fotos de "lugares que visitó viafa"
   clientes: 12, // opiniones de "esto dicen nuestros clientes"
 }

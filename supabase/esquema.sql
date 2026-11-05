@@ -66,7 +66,7 @@ create table if not exists public.promociones (
   creado_en  timestamptz not null default now()
 );
 
--- Los favoritos de Quito (tarjetas "los más vendidos" del inicio)
+-- Lugares favoritos (ofertas detalladas de "los más vendidos" del inicio)
 create table if not exists public.favoritos (
   id         uuid primary key default gen_random_uuid(),
   nombre     text not null,
@@ -78,6 +78,16 @@ create table if not exists public.favoritos (
   visible    boolean not null default true,
   creado_en  timestamptz not null default now()
 );
+
+-- Campos detallados de cada oferta (se pueden agregar sobre una base ya creada)
+alter table public.favoritos add column if not exists salidas     text not null default '';  -- "salidas 2026 · septiembre a diciembre"
+alter table public.favoritos add column if not exists estrellas   int  not null default 0;   -- categoría del hotel (0 = no mostrar)
+alter table public.favoritos add column if not exists tipo        text not null default '';  -- vacaciones, relax, familiar…
+alter table public.favoritos add column if not exists noches      int  not null default 0;
+alter table public.favoritos add column if not exists salida      text not null default '';  -- ciudad de salida
+alter table public.favoritos add column if not exists aerolinea   text not null default '';
+alter table public.favoritos add column if not exists descripcion text not null default '';
+alter table public.favoritos add column if not exists incluye     text[] not null default '{}'; -- vuelo, hotel, comidas, todo, traslados, tours, asistencia
 
 -- Lugares que visitó Viafa (collage de fotos)
 create table if not exists public.viajes_galeria (
@@ -143,8 +153,10 @@ create trigger limite before insert on public.testimonios
 -- Largo máximo de los textos (igual que en el panel)
 alter table public.favoritos drop constraint if exists favoritos_largos;
 alter table public.favoritos add constraint favoritos_largos check (
-  char_length(nombre) <= 40 and char_length(region) <= 30 and char_length(detalle) <= 80
-  and precio between 0 and 99999 and char_length(foto) <= 500);
+  char_length(nombre) <= 60 and char_length(salidas) <= 50 and char_length(salida) <= 40
+  and char_length(aerolinea) <= 30 and char_length(descripcion) <= 240
+  and precio between 0 and 99999 and estrellas between 0 and 5 and noches between 0 and 60
+  and cardinality(incluye) <= 10 and char_length(foto) <= 500);
 alter table public.viajes_galeria drop constraint if exists viajes_largos;
 alter table public.viajes_galeria add constraint viajes_largos check (
   char_length(lugar) <= 40 and char_length(foto) <= 500);
@@ -275,12 +287,12 @@ select * from (values
 ) as v(categoria, titulo, texto, foto, vigencia)
 where not exists (select 1 from public.promociones);
 
-insert into public.favoritos (nombre, region, detalle, precio, foto, orden)
+insert into public.favoritos (nombre, salidas, estrellas, precio, tipo, noches, salida, aerolinea, descripcion, incluye, foto, orden)
 select * from (values
-  ('punta cana', 'caribe', '5 noches · todo incluido · vuelo + hotel + traslados', 1290, 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1400&q=75&auto=format&fit=crop', 1),
-  ('cartagena', 'caribe', '4 noches · hotel en ciudad amurallada · desayunos', 690, 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1400&q=75&auto=format&fit=crop', 2),
-  ('buenos aires + iguazú', 'sudamérica', '7 noches · city tour + cataratas · vuelos internos', 1450, 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1400&q=75&auto=format&fit=crop', 3)
-) as v(nombre, region, detalle, precio, foto, orden)
+  ('tour a punta cana desde quito', 'salidas 2026 · septiembre a diciembre', 4, 1149, 'vacaciones', 4, 'quito y guayaquil', 'copa airlines', 'escápate a punta cana con un viaje todo incluido en un resort frente al mar. 4 noches de playa, piscinas y relax, con salidas desde quito y guayaquil.', array['vuelo', 'hotel', 'todo', 'traslados', 'asistencia']::text[], 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1200&q=75&auto=format&fit=crop', 1),
+  ('tour a cartagena desde ecuador', 'salidas 2026 · enero a diciembre', 3, 813, 'relax', 3, 'quito y guayaquil', 'avianca', 'tres noches en la histórica ciudad de cartagena, patrimonio cultural de la humanidad. hotel todo incluido, city tour y la ciudad amurallada.', array['vuelo', 'hotel', 'todo', 'tours']::text[], 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1200&q=75&auto=format&fit=crop', 2),
+  ('buenos aires + cataratas del iguazú', 'salidas 2026 · marzo a noviembre', 4, 1450, 'cultural', 7, 'quito', 'latam', 'ciudad, tango y una de las maravillas naturales del mundo en un solo viaje: 4 noches en buenos aires y 3 en iguazú, con vuelos internos.', array['vuelo', 'hotel', 'comidas', 'traslados', 'tours', 'asistencia']::text[], 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1200&q=75&auto=format&fit=crop', 3)
+) as v(nombre, salidas, estrellas, precio, tipo, noches, salida, aerolinea, descripcion, incluye, foto, orden)
 where not exists (select 1 from public.favoritos);
 
 insert into public.viajes_galeria (lugar, foto, orden)
