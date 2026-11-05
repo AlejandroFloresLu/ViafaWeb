@@ -25,6 +25,17 @@ En el celular (mismo wifi), abre la dirección **Network** que aparece en la con
 
 En el panel, **"reiniciar demo"** borra lo publicado.
 
+## Páginas
+- **Inicio** (`/#/web`): portada, los más vendidos, promociones, nosotros, referencias, Google, horario y mapa.
+- **Menú "destinos ▾"**: desplegable por región (caribe, sudamérica, ecuador…), como en la web actual.
+- **Destinos** (`/#/destinos`): todos los destinos agrupados por región.
+- **Un destino** (`/#/destinos/cartagena`): banner grande con fotos, precio, botón de WhatsApp,
+  **ficha PDF** y los **lugares** de ese destino.
+- **Un lugar** (`/#/destinos/cartagena/islas-del-rosario`): fotos grandes, descripción, duración,
+  si viene incluido en el paquete, y botones para cotizar y compartir.
+
+Los lugares de cada destino están en `src/data/sitios.js`. Las fichas PDF (de ejemplo) en la carpeta `pdf/`.
+
 ## Datos
 - **Reales** (de viafaecuador.com.ec): nombre, dirección, teléfonos, WhatsApp, correo, destinos
   (Cartagena, Punta Cana, Buenos Aires/Iguazú) y los 4 "¿porqué confiar en nosotros?".

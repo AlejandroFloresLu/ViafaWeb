@@ -67,15 +67,59 @@ export const negocio = {
   ],
 
   /* DESTINOS / PAQUETES — "carta" de la agencia.
+     id = dirección de su página: /#/destinos/punta-cana
+     pdf = ficha descargable (por ahora PDFs de EJEMPLO en la carpeta pdf/).
      Cartagena, Punta Cana y Buenos Aires están en su web.
      Galápagos y Cancún son agregados de EJEMPLO. Precios de EJEMPLO. */
   carta: [
-    { id: 'punta-cana', nombre: 'punta cana', region: 'caribe', detalle: '5 noches · todo incluido · vuelo + hotel + traslados', precio: 1290, foto: u('1705507972578-78537a2dda73', 1000), vistas: 486, masVendido: true },
-    { id: 'cartagena', nombre: 'cartagena', region: 'caribe', detalle: '4 noches · hotel en ciudad amurallada · desayunos', precio: 690, foto: u('1536308037887-165852797016', 1000), vistas: 431, masVendido: true },
-    { id: 'buenos-aires', nombre: 'buenos aires + iguazú', region: 'sudamérica', detalle: '7 noches · city tour + cataratas · vuelos internos', precio: 1450, foto: u('1590246185449-e9e2ddd683bb', 1000), vistas: 302, masVendido: true },
-    { id: 'galapagos', nombre: 'galápagos', region: 'ecuador', detalle: '4 noches · santa cruz · tours a islas', precio: 980, foto: u('1706957614198-8d2e5f0ed6ea', 1000), vistas: 255 },
-    { id: 'cancun', nombre: 'cancún', region: 'caribe', detalle: '5 noches · todo incluido · zona hotelera', precio: 1350, foto: u('1630252421399-ddde79af47b3', 1000), vistas: 214 },
-    { id: 'baires-solo', nombre: 'buenos aires', region: 'sudamérica', detalle: '5 noches · palermo · tango show', precio: 990, foto: u('1589909202802-8f4aadce1849', 1000), vistas: 176 },
+    {
+      id: 'punta-cana', nombre: 'punta cana', region: 'caribe', noches: 5,
+      detalle: '5 noches · todo incluido · vuelo + hotel + traslados', precio: 1290, masVendido: true, vistas: 486,
+      foto: u('1705507972578-78537a2dda73', 1400),
+      galeria: [u('1569700946659-fe1941c71fe4', 1200), u('1637576305711-23d3b0f72881', 1200), u('1705507972578-78537a2dda73', 1200)],
+      incluye: ['vuelo ida y vuelta desde quito', 'hotel todo incluido 5 noches', 'traslados aeropuerto – hotel – aeropuerto', 'asistencia de viaje', 'impuestos aéreos'],
+      pdf: 'pdf/punta-cana.pdf',
+    },
+    {
+      id: 'cartagena', nombre: 'cartagena', region: 'caribe', noches: 4,
+      detalle: '4 noches · hotel en ciudad amurallada · desayunos', precio: 690, masVendido: true, vistas: 431,
+      foto: u('1536308037887-165852797016', 1400),
+      galeria: [u('1534943441045-1009d7cb0bb9', 1200), u('1583531352515-8884af319dc1', 1200), u('1536308037887-165852797016', 1200)],
+      incluye: ['vuelo ida y vuelta desde quito', 'hotel en la ciudad amurallada 4 noches', 'desayunos diarios', 'city tour y tour a islas del rosario', 'traslados y asistencia de viaje'],
+      pdf: 'pdf/cartagena.pdf',
+    },
+    {
+      id: 'buenos-aires-iguazu', nombre: 'buenos aires + iguazú', region: 'sudamérica', noches: 7,
+      detalle: '7 noches · city tour + cataratas · vuelos internos', precio: 1450, masVendido: true, vistas: 302,
+      foto: u('1590246185449-e9e2ddd683bb', 1400),
+      galeria: [u('1538703012804-b74999aa11b9', 1200), u('1589909202802-8f4aadce1849', 1200), u('1612294037637-ec328d0e075e', 1200)],
+      incluye: ['vuelos quito – buenos aires – iguazú – quito', '4 noches en buenos aires + 3 en iguazú', 'desayunos diarios', 'city tour y excursión a las cataratas', 'traslados y asistencia de viaje'],
+      pdf: 'pdf/buenos-aires-iguazu.pdf',
+    },
+    {
+      id: 'galapagos', nombre: 'galápagos', region: 'ecuador', noches: 4,
+      detalle: '4 noches · santa cruz · tours a islas', precio: 980, vistas: 255,
+      foto: u('1706957614198-8d2e5f0ed6ea', 1400),
+      galeria: [u('1595517930215-d2778a56ac93', 1200), u('1503301360699-4f60cf292ec8', 1200), u('1706957614198-8d2e5f0ed6ea', 1200)],
+      incluye: ['vuelo ida y vuelta desde quito', 'hotel en santa cruz 4 noches', 'tours a isla bartolomé y playa tortuga bay', 'desayunos y almuerzos en tours', 'traslados y guía naturalista'],
+      pdf: 'pdf/galapagos.pdf',
+    },
+    {
+      id: 'cancun', nombre: 'cancún', region: 'caribe', noches: 5,
+      detalle: '5 noches · todo incluido · zona hotelera', precio: 1350, vistas: 214,
+      foto: u('1630252421399-ddde79af47b3', 1400),
+      galeria: [u('1510097467424-192d713fd8b2', 1200), u('1630252421399-ddde79af47b3', 1200)],
+      incluye: ['vuelo ida y vuelta desde quito', 'hotel todo incluido en zona hotelera 5 noches', 'traslados aeropuerto – hotel – aeropuerto', 'asistencia de viaje'],
+      pdf: 'pdf/cancun.pdf',
+    },
+    {
+      id: 'buenos-aires', nombre: 'buenos aires', region: 'sudamérica', noches: 5,
+      detalle: '5 noches · palermo · tango show', precio: 990, vistas: 176,
+      foto: u('1589909202802-8f4aadce1849', 1400),
+      galeria: [u('1612294037637-ec328d0e075e', 1200), u('1589909202802-8f4aadce1849', 1200)],
+      incluye: ['vuelo ida y vuelta desde quito', 'hotel en palermo 5 noches', 'desayunos diarios', 'city tour y cena con show de tango', 'traslados y asistencia de viaje'],
+      pdf: 'pdf/buenos-aires.pdf',
+    },
   ],
 
   // Reseñas en Google — DE EJEMPLO

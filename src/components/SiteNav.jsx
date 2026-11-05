@@ -1,0 +1,129 @@
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react'
+import { negocio } from '../data/negocio'
+import { useContenido } from '../lib/contenido'
+import { porRegion, useIrA } from '../lib/navegacion'
+import { whatsapp } from '../lib/utils'
+
+/* Menú principal, igual al de su web actual:
+   inicio · nosotros · destinos ▾ (por región) · contáctenos · cotice ahora
+   variante "sobre"  → transparente, encima de la foto de portada
+   variante "solida" → barra azul fija arriba (páginas interiores) */
+export function SiteNav({ variante = 'solida' }) {
+  const { destinos } = useContenido()
+  const irA = useIrA()
+  const { pathname } = useLocation()
+  const [mega, setMega] = useState(false)
+  const [movil, setMovil] = useState(false)
+  const cajaRef = useRef(null)
+  const grupos = porRegion(destinos)
+  const cotizar = whatsapp('Hola Viafa 👋 quiero cotizar un viaje.')
+
+  // Cerrar el menú de destinos al cambiar de página o al hacer clic afuera
+  useEffect(() => {
+    setMega(false)
+    setMovil(false)
+  }, [pathname])
+  useEffect(() => {
+    if (!mega) return
+    const fuera = (e) => !cajaRef.current?.contains(e.target) && setMega(false)
+    const esc = (e) => e.key === 'Escape' && setMega(false)
+    document.addEventListener('mousedown', fuera)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', fuera)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [mega])
+
+  const sobre = variante === 'sobre'
+  const enlace = 'text-[13px] uppercase tracking-[0.12em] opacity-90 hover:opacity-100'
+
+  return (
+    <nav ref={cajaRef} className={sobre ? 'absolute inset-x-0 top-0 z-30 text-paper' : 'sticky top-0 z-30 bg-olive text-paper shadow-[0_6px_20px_-12px_rgba(0,0,0,0.5)]'}>
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+        <Link to="/web" className="text-[24px] font-semibold tracking-[-0.03em]">
+          {negocio.nombre}<span className="text-sun">.</span>
+        </Link>
+
+        {/* Escritorio */}
+        <div className="hidden items-center gap-7 lg:flex">
+          <Link to="/web" className={enlace}>inicio</Link>
+          <button type="button" onClick={() => irA('nosotros')} className={enlace}>nosotros</button>
+          <button type="button" onClick={() => setMega((m) => !m)} aria-expanded={mega} className={`${enlace} inline-flex items-center gap-1`}>
+            destinos <ChevronDown size={14} className={`transition-transform ${mega ? 'rotate-180' : ''}`} />
+          </button>
+          <button type="button" onClick={() => irA('visitanos')} className={enlace}>contáctenos</button>
+          <a href={cotizar} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center bg-sun px-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
+            cotice ahora
+          </a>
+        </div>
+
+        <button type="button" aria-label="Abrir menú" onClick={() => setMovil(true)} className="p-1 lg:hidden">
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Menú de destinos (escritorio) */}
+      {mega && (
+        <div className="absolute inset-x-0 top-full hidden lg:block">
+          <div className="mx-auto max-w-6xl px-8">
+            <div className="rise grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-8 bg-ink p-8 text-paper shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]">
+              {grupos.map((g) => (
+                <div key={g.region}>
+                  <p className="eyebrow text-sun">{g.region}</p>
+                  <ul className="mt-4 space-y-2.5">
+                    {g.destinos.map((d) => (
+                      <li key={d.id}>
+                        <Link to={`/destinos/${d.id}`} className="group inline-flex items-center gap-2 text-[15px] text-paper/85 hover:text-paper">
+                          <ArrowRight size={13} className="text-sun transition-transform group-hover:translate-x-0.5" /> {d.nombre}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <div className="flex flex-col justify-end">
+                <Link to="/destinos" className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-sun">
+                  ver todos los destinos <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Menú en el celular */}
+      {movil && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-paper px-5 py-5 text-ink lg:hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[24px] font-semibold tracking-[-0.03em]">{negocio.nombre}<span className="text-sun">.</span></span>
+            <button type="button" aria-label="Cerrar menú" onClick={() => setMovil(false)} className="p-1"><X size={24} /></button>
+          </div>
+          <div className="mt-10 flex flex-col gap-4 text-[28px] font-medium tracking-[-0.02em]">
+            <Link to="/web" onClick={() => setMovil(false)}>inicio</Link>
+            <button type="button" className="text-left" onClick={() => { setMovil(false); irA('nosotros') }}>nosotros</button>
+            <Link to="/destinos" onClick={() => setMovil(false)}>destinos</Link>
+          </div>
+          <div className="mt-3 space-y-5 border-l-2 border-sun pl-4">
+            {grupos.map((g) => (
+              <div key={g.region}>
+                <p className="eyebrow text-ink-3">{g.region}</p>
+                <div className="mt-1.5 flex flex-col gap-1.5 text-[17px]">
+                  {g.destinos.map((d) => (
+                    <Link key={d.id} to={`/destinos/${d.id}`} onClick={() => setMovil(false)} className="text-ink-2">{d.nombre}</Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-col gap-4 text-[28px] font-medium tracking-[-0.02em]">
+            <button type="button" className="text-left" onClick={() => { setMovil(false); irA('visitanos') }}>contáctenos</button>
+            <a href={cotizar} target="_blank" rel="noreferrer" className="text-clay">cotice ahora</a>
+          </div>
+        </div>
+      )}
+    </nav>
+  )
+}

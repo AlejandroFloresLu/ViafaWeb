@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, Mail, MapPin, Menu, MessageCircle, Navigation, Phone, Quote, Star, X } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Mail, MapPin, MessageCircle, Navigation, Phone, Quote, Star } from 'lucide-react'
 import { negocio } from '../data/negocio'
 import { MOSTRAR_DEMO } from '../config'
 import { usePublicaciones } from '../lib/publicaciones'
 import { useContenido } from '../lib/contenido'
 import { PostCard } from '../components/PostCard'
+import { SiteNav } from '../components/SiteNav'
+import { SiteFooter } from '../components/SiteFooter'
+import { useBajarASeccion } from '../lib/navegacion'
 import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, precio, whatsapp } from '../lib/utils'
 
 /* ==========================================================================
@@ -15,6 +18,8 @@ export function Web() {
   const n = negocio
   const demo = usePublicaciones()
   const { destinos, promociones, horario, recargar } = useContenido()
+
+  useBajarASeccion()
 
   // Trae lo último de la base de datos cada vez que se abre la web
   useEffect(() => {
@@ -53,14 +58,14 @@ export function Web() {
       <header className="relative h-[86svh] min-h-[560px] w-full overflow-hidden bg-olive">
         <img src={n.fotos.portada} alt="Playa con palmeras" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/5 to-black/55" />
-        <Nav cotizar={cotizar()} />
+        <SiteNav variante="sobre" />
         <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-6xl px-5 pb-14 sm:px-8 sm:pb-20">
           <p className="eyebrow text-paper/85">{n.tipo} · {n.sector}</p>
           <h1 className="mt-3 max-w-[15ch] text-[44px] font-medium leading-[1.02] tracking-[-0.02em] text-paper sm:text-[68px]">{n.frase}</h1>
           <div className="mt-7 flex flex-wrap gap-3">
-            <a href="#destinos" className="inline-flex h-11 items-center bg-sun px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
+            <Link to="/destinos" className="inline-flex h-11 items-center bg-sun px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
               ver destinos
-            </a>
+            </Link>
             <a href={cotizar()} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center gap-2 border border-paper/70 px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-paper hover:bg-paper/10">
               <MessageCircle size={14} /> cotizar gratis
             </a>
@@ -89,7 +94,7 @@ export function Web() {
         <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">los favoritos de quito.</h2>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {masVendidos.map((d, i) => (
-            <a key={d.id} href={cotizar(d.nombre)} target="_blank" rel="noreferrer" className="group relative min-h-[420px] overflow-hidden bg-paper-3">
+            <Link key={d.id} to={`/destinos/${d.id}`} className="group relative min-h-[420px] overflow-hidden bg-paper-3">
               <img src={d.foto} alt={d.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <span className="absolute left-4 top-4 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">#{i + 1} más vendido</span>
@@ -99,12 +104,15 @@ export function Web() {
                 <p className="mt-1 text-[13px] text-paper/80">{d.detalle}</p>
                 <p className="mt-4 flex items-center justify-between">
                   <span className="text-[14px]">desde <span className="text-[22px] font-medium">{precio(d.precio)}</span></span>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em]">cotizar <ArrowRight size={14} /></span>
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em]">ver destino <ArrowRight size={14} /></span>
                 </p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
+        <Link to="/destinos" className="mt-8 inline-flex items-center gap-2 border-b border-ink/30 pb-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] hover:border-ink">
+          ver todos los destinos <ArrowRight size={14} />
+        </Link>
       </section>
 
       {/* Promociones (se ocultan si no hay ninguna) */}
@@ -127,8 +135,6 @@ export function Web() {
         </section>
       )}
 
-      {/* Todos los destinos */}
-      <Destinos cotizar={cotizar} destinos={destinos} />
 
       {/* Banda foto */}
       <section className="relative mt-28 min-h-[420px] overflow-hidden bg-olive sm:mt-36">
@@ -176,108 +182,12 @@ export function Web() {
       </section>
 
       <Visitanos horario={horario} />
-      <Footer cotizar={cotizar()} />
+      <SiteFooter />
     </div>
   )
 }
 
 /* ---------------------------------------------------------------------- */
-function Destinos({ cotizar, destinos }) {
-  const regiones = useMemo(() => ['todos', ...new Set(destinos.map((d) => d.region))], [destinos])
-  const [reg, setReg] = useState('todos')
-  const lista = destinos.filter((d) => reg === 'todos' || d.region === reg)
-  return (
-    <section id="destinos" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="eyebrow text-ink-3">destinos</p>
-          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">¿a dónde quieres ir?</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {regiones.map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setReg(r)}
-              aria-pressed={reg === r}
-              className={`h-9 border px-3.5 text-[13px] ${reg === r ? 'border-ink bg-ink text-paper' : 'border-line text-ink-2 hover:border-ink'}`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="mt-10 grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {lista.map((d) => (
-          <div key={d.id} className="group flex flex-col">
-            <div className="relative aspect-[4/3] overflow-hidden bg-paper-2">
-              <img src={d.foto} alt={d.nombre} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
-              {d.masVendido && <span className="absolute left-3 top-3 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">más vendido</span>}
-            </div>
-            <div className="flex flex-1 flex-col pt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">{d.region}</p>
-                  <h3 className="mt-1 text-[18px] font-medium leading-snug">{d.nombre}</h3>
-                </div>
-                <p className="shrink-0 text-right text-[12px] text-ink-3">desde<span className="block text-[17px] font-medium tabular-nums text-ink">{precio(d.precio)}</span></p>
-              </div>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{d.detalle}</p>
-              <a href={cotizar(d.nombre)} target="_blank" rel="noreferrer" className="mt-3 inline-flex w-fit items-center gap-1 border-b border-ink/30 pb-0.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:border-ink">
-                cotizar este viaje <ArrowUpRight size={13} />
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
-      <p className="mt-8 text-[12px] text-ink-3">precios por persona en acomodación doble, sujetos a disponibilidad.</p>
-    </section>
-  )
-}
-
-function Nav({ cotizar }) {
-  const [abierto, setAbierto] = useState(false)
-  const n = negocio
-  const links = [
-    ['destinos', '#destinos'],
-    ['promociones', '#promociones'],
-    ['nosotros', '#nosotros'],
-    ['contacto', '#visitanos'],
-  ]
-  return (
-    <nav className="absolute inset-x-0 top-0 z-20">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 text-paper sm:px-8">
-        <div className="hidden gap-7 text-[13px] sm:flex">
-          {links.map(([l, href]) => (
-            <a key={l} href={href} className="opacity-85 hover:opacity-100">{l}</a>
-          ))}
-        </div>
-        <span className="text-[22px] font-semibold tracking-[-0.03em] sm:absolute sm:left-1/2 sm:-translate-x-1/2">{n.nombre}<span className="text-sun">.</span></span>
-        <div className="flex items-center gap-4 text-[13px]">
-          <a href={cotizar} target="_blank" rel="noreferrer" className="hidden opacity-85 hover:opacity-100 sm:inline">cotiza ahora</a>
-          <button type="button" aria-label="Abrir menú" onClick={() => setAbierto(true)} className="p-1 sm:hidden">
-            <Menu size={22} />
-          </button>
-        </div>
-      </div>
-      {abierto && (
-        <div className="fixed inset-0 z-40 bg-paper px-5 py-5 text-ink sm:hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-[22px] font-semibold tracking-[-0.03em]">{n.nombre}</span>
-            <button type="button" aria-label="Cerrar menú" onClick={() => setAbierto(false)} className="p-1"><X size={22} /></button>
-          </div>
-          <div className="mt-12 flex flex-col gap-5 text-[30px] font-medium tracking-[-0.02em]">
-            {links.map(([l, href]) => (
-              <a key={l} href={href} onClick={() => setAbierto(false)}>{l}</a>
-            ))}
-            <a href={cotizar} target="_blank" rel="noreferrer" className="text-clay">cotiza ahora</a>
-          </div>
-        </div>
-      )}
-    </nav>
-  )
-}
-
 function Estrellas({ valor, size = 14 }) {
   return (
     <span className="inline-flex gap-0.5" aria-label={`${valor} de 5 estrellas`}>
@@ -390,36 +300,5 @@ function Visitanos({ horario }) {
         </div>
       </div>
     </section>
-  )
-}
-
-function Footer({ cotizar }) {
-  const n = negocio
-  return (
-    <footer className="mt-28 bg-olive text-paper/80">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 text-[13px] sm:grid-cols-[1.5fr_1fr_1fr] sm:px-8">
-        <div>
-          <p className="text-[24px] font-semibold tracking-[-0.03em] text-paper">{n.nombre}<span className="text-sun">.</span></p>
-          <p className="mt-2 max-w-xs leading-relaxed">{n.nombreLargo}. {n.direccion}, quito.</p>
-        </div>
-        <div className="space-y-2">
-          <a href="#destinos" className="block hover:text-paper">destinos</a>
-          <a href="#promociones" className="block hover:text-paper">promociones</a>
-          <a href="#referencias" className="block hover:text-paper">referencias</a>
-          <a href="#visitanos" className="block hover:text-paper">contacto</a>
-        </div>
-        <div className="space-y-2">
-          <a href={cotizar} target="_blank" rel="noreferrer" className="block hover:text-paper">whatsapp</a>
-          <a href="https://www.facebook.com/VIAFA-Agencia-De-Viajes-1524900374407878/" target="_blank" rel="noreferrer" className="block hover:text-paper">facebook</a>
-          <a href={mapaFicha()} target="_blank" rel="noreferrer" className="block hover:text-paper">google maps</a>
-        </div>
-      </div>
-      <div className="border-t border-paper/10">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-[12px] text-paper/50 sm:px-8">
-          <span>© {new Date().getFullYear()} {n.nombreLargo} </span>
-          {MOSTRAR_DEMO && <Link to="/panel" className="hover:text-paper">acceso agencia</Link>}
-        </div>
-      </div>
-    </footer>
   )
 }

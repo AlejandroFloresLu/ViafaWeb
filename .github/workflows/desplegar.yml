@@ -45,6 +45,7 @@ jobs:
           cp index.html publicar/index.html
           cp public/robots.txt publicar/robots.txt
           cp public/panel/index.html publicar/panel/index.html
+          cp -r pdf publicar/pdf
 
       - name: Subir por FTP
         if: env.FTP_SERVER != ''

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react'
 import { negocio, publicacionesIniciales } from '../data/negocio'
+import { sitios } from '../data/sitios'
 import { supabase } from './supabase'
 
 /* ==========================================================================
@@ -28,7 +29,14 @@ export function haceCuanto(fecha) {
 
 /* Base de datos (snake_case) → formato que usa la web */
 export const aDestino = (d) => ({
-  id: d.id,
+  uuid: d.id, // id interno de la base (para editar)
+  id: d.slug || d.id, // dirección de la página: /destinos/<id>
+  slug: d.slug || '',
+  noches: d.noches || 0,
+  incluye: d.incluye || [],
+  galeria: d.galeria || [],
+  pdf: d.pdf || '',
+  sitios: sitios[d.slug] || [], // lugares del destino (src/data/sitios.js)
   nombre: d.nombre,
   region: d.region,
   detalle: d.detalle,
@@ -54,7 +62,7 @@ export const aPromo = (p) => ({
 export const aDia = (h) => ({ indice: h.dia_idx, dia: h.dia, abre: h.abre, cierra: h.cierra, cerrado: h.cerrado })
 
 const local = {
-  destinos: negocio.carta,
+  destinos: negocio.carta.map((d) => ({ ...d, sitios: sitios[d.id] || [] })),
   promociones: publicacionesIniciales,
   horario: negocio.horario.map((h, i) => ({ indice: i, cerrado: false, ...h })),
 }

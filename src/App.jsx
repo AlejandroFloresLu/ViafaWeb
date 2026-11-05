@@ -8,9 +8,14 @@ import { Web } from './views/Web'
 import { Panel } from './views/Panel'
 import { Publicar } from './views/Publicar'
 import { Admin } from './views/admin/Admin'
+import { Destinos } from './views/Destinos'
+import { Destino, Sitio } from './views/Destino'
 
 /* Rutas
-   /web     → la web de Viafa (lee destinos, promos y horario de Supabase)
+   /web                  → inicio de Viafa (más vendidos, promos, nosotros, contacto)
+   /destinos             → todos los destinos por región
+   /destinos/:id         → un destino: banner, precio, PDF y sus lugares
+   /destinos/:id/:sitio  → un lugar del destino, con fotos e información
    /panel   → PANEL REAL con login (promociones, destinos, horario)
 
    Con MOSTRAR_DEMO = true (modo presentación):
@@ -35,6 +40,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/web" replace />} />
             <Route path="/web" element={<Web />} />
+            <Route path="/destinos" element={<Destinos />} />
+            <Route path="/destinos/:id" element={<Destino />} />
+            <Route path="/destinos/:id/:sitio" element={<Sitio />} />
             {MOSTRAR_DEMO ? (
               <>
                 <Route path="/panel" element={<Panel />} />

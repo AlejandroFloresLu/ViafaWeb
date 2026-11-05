@@ -46,6 +46,13 @@ create table if not exists public.destinos (
   creado_en   timestamptz not null default now()
 );
 
+-- Columnas de la página de cada destino (se pueden agregar sobre una base ya creada)
+alter table public.destinos add column if not exists slug    text unique;      -- dirección: /destinos/<slug>
+alter table public.destinos add column if not exists noches  int not null default 0;
+alter table public.destinos add column if not exists incluye text[] not null default '{}';
+alter table public.destinos add column if not exists galeria text[] not null default '{}';
+alter table public.destinos add column if not exists pdf     text not null default '';
+
 create table if not exists public.promociones (
   id         uuid primary key default gen_random_uuid(),
   categoria  text not null default 'promo',   -- promo | nuevo | evento | aviso
@@ -101,7 +108,8 @@ create policy "editar horario" on public.horario
 
 -- ---------------------------------------------------------------------------
 -- 4. FOTOS (Storage)
---    Carpeta pública "fotos": todos las ven, solo administradores suben/borran.
+--    Carpeta pública "fotos" (fotos y PDFs de destinos): todos las ven,
+--    solo administradores suben/borran.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('fotos', 'fotos', true)
@@ -138,15 +146,15 @@ select * from (values
 ) as v(dia_idx, dia, abre, cierra, cerrado)
 where not exists (select 1 from public.horario);
 
-insert into public.destinos (nombre, region, detalle, precio, foto, mas_vendido, orden)
+insert into public.destinos (slug, nombre, region, detalle, precio, foto, mas_vendido, orden, noches, incluye, galeria, pdf)
 select * from (values
-  ('punta cana', 'caribe', '5 noches · todo incluido · vuelo + hotel + traslados', 1290, 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1000&q=75&auto=format&fit=crop', true, 0),
-  ('cartagena', 'caribe', '4 noches · hotel en ciudad amurallada · desayunos', 690, 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1000&q=75&auto=format&fit=crop', true, 1),
-  ('buenos aires + iguazú', 'sudamérica', '7 noches · city tour + cataratas · vuelos internos', 1450, 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1000&q=75&auto=format&fit=crop', true, 2),
-  ('galápagos', 'ecuador', '4 noches · santa cruz · tours a islas', 980, 'https://images.unsplash.com/photo-1706957614198-8d2e5f0ed6ea?w=1000&q=75&auto=format&fit=crop', false, 3),
-  ('cancún', 'caribe', '5 noches · todo incluido · zona hotelera', 1350, 'https://images.unsplash.com/photo-1630252421399-ddde79af47b3?w=1000&q=75&auto=format&fit=crop', false, 4),
-  ('buenos aires', 'sudamérica', '5 noches · palermo · tango show', 990, 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1000&q=75&auto=format&fit=crop', false, 5)
-) as v(nombre, region, detalle, precio, foto, mas_vendido, orden)
+  ('punta-cana', 'punta cana', 'caribe', '5 noches · todo incluido · vuelo + hotel + traslados', 1290, 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1400&q=75&auto=format&fit=crop', true, 0, 5, array['vuelo ida y vuelta desde quito', 'hotel todo incluido 5 noches', 'traslados aeropuerto – hotel – aeropuerto', 'asistencia de viaje', 'impuestos aéreos']::text[], array['https://images.unsplash.com/photo-1569700946659-fe1941c71fe4?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1637576305711-23d3b0f72881?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/punta-cana.pdf'),
+  ('cartagena', 'cartagena', 'caribe', '4 noches · hotel en ciudad amurallada · desayunos', 690, 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1400&q=75&auto=format&fit=crop', true, 1, 4, array['vuelo ida y vuelta desde quito', 'hotel en la ciudad amurallada 4 noches', 'desayunos diarios', 'city tour y tour a islas del rosario', 'traslados y asistencia de viaje']::text[], array['https://images.unsplash.com/photo-1534943441045-1009d7cb0bb9?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1583531352515-8884af319dc1?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/cartagena.pdf'),
+  ('buenos-aires-iguazu', 'buenos aires + iguazú', 'sudamérica', '7 noches · city tour + cataratas · vuelos internos', 1450, 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1400&q=75&auto=format&fit=crop', true, 2, 7, array['vuelos quito – buenos aires – iguazú – quito', '4 noches en buenos aires + 3 en iguazú', 'desayunos diarios', 'city tour y excursión a las cataratas', 'traslados y asistencia de viaje']::text[], array['https://images.unsplash.com/photo-1538703012804-b74999aa11b9?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1612294037637-ec328d0e075e?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/buenos-aires-iguazu.pdf'),
+  ('galapagos', 'galápagos', 'ecuador', '4 noches · santa cruz · tours a islas', 980, 'https://images.unsplash.com/photo-1706957614198-8d2e5f0ed6ea?w=1400&q=75&auto=format&fit=crop', false, 3, 4, array['vuelo ida y vuelta desde quito', 'hotel en santa cruz 4 noches', 'tours a isla bartolomé y playa tortuga bay', 'desayunos y almuerzos en tours', 'traslados y guía naturalista']::text[], array['https://images.unsplash.com/photo-1595517930215-d2778a56ac93?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1503301360699-4f60cf292ec8?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1706957614198-8d2e5f0ed6ea?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/galapagos.pdf'),
+  ('cancun', 'cancún', 'caribe', '5 noches · todo incluido · zona hotelera', 1350, 'https://images.unsplash.com/photo-1630252421399-ddde79af47b3?w=1400&q=75&auto=format&fit=crop', false, 4, 5, array['vuelo ida y vuelta desde quito', 'hotel todo incluido en zona hotelera 5 noches', 'traslados aeropuerto – hotel – aeropuerto', 'asistencia de viaje']::text[], array['https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1630252421399-ddde79af47b3?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/cancun.pdf'),
+  ('buenos-aires', 'buenos aires', 'sudamérica', '5 noches · palermo · tango show', 990, 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1400&q=75&auto=format&fit=crop', false, 5, 5, array['vuelo ida y vuelta desde quito', 'hotel en palermo 5 noches', 'desayunos diarios', 'city tour y cena con show de tango', 'traslados y asistencia de viaje']::text[], array['https://images.unsplash.com/photo-1612294037637-ec328d0e075e?w=1200&q=75&auto=format&fit=crop', 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=75&auto=format&fit=crop']::text[], 'pdf/buenos-aires.pdf')
+) as v(slug, nombre, region, detalle, precio, foto, mas_vendido, orden, noches, incluye, galeria, pdf)
 where not exists (select 1 from public.destinos);
 
 insert into public.promociones (categoria, titulo, texto, foto, vigencia)
