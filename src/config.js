@@ -37,3 +37,21 @@ export const SUPABASE_ANON_KEY = ''
    ⚠️ Si cambias CLAVE_SUFIJO, todas las claves existentes dejan de servir. */
 export const ADMIN_DOMINIO = 'viafaecuador.com.ec'
 export const CLAVE_SUFIJO = '::viafa'
+
+/* ---------- Límites (para que la web funcione todo el año sin sorpresas) ----------
+   Mantienen la web rápida y el almacenamiento y el tráfico muy por debajo de
+   los límites del plan. El panel no deja pasar de aquí y la base de datos
+   también lo bloquea (supabase/esquema.sql), así que no se pueden saltar.
+   Si los cambias, cambia también los números en esquema.sql. */
+export const LIMITES = {
+  favoritos: 6, // tarjetas de "los favoritos de quito"
+  viajes: 24, //   fotos de "lugares que visitó viafa"
+  clientes: 12, // opiniones de "esto dicen nuestros clientes"
+}
+
+/* Fotos: se achican y comprimen en el navegador ANTES de subirlas. */
+export const FOTO = {
+  ladoMaximo: 1200, //  px del lado más largo (suficiente para pantallas retina)
+  pesoMaximoKB: 300, // se baja la calidad hasta quedar por debajo
+  archivoMaximoMB: 25, // fotos más pesadas que esto se rechazan (antes de procesarlas)
+}

@@ -7,7 +7,7 @@
 | **Repositorio** | https://github.com/AlejandroFloresLu/ViafaWeb (rama `main`) |
 | **Vista previa** | https://alejandrofloreslu.github.io/ViafaWeb/ |
 | **Desarrollador** | Alejandro Flores (flores.alejandro10moc@gmail.com) |
-| **Versión** | 1.1 · 5 de noviembre de 2026 · se agregó la revisión del hosting (§14) |
+| **Versión** | 1.2 · 5 de noviembre de 2026 · revisión del hosting (§14) y protecciones 365 días (§12.1) |
 | **Para** | revisión técnica antes de publicar en el dominio |
 
 ---
@@ -76,6 +76,7 @@ public/robots.txt        bloquea /admin/ a buscadores
 pdf/                     fichas PDF de destinos (sección oculta por ahora)
 supabase/esquema.sql     tablas, seguridad (RLS), bucket de fotos y datos iniciales
 .github/workflows/desplegar.yml   CI/CD al hosting
+.github/workflows/mantener-activo.yml   revisión semanal (base activa + web responde)
 docs/                    esta documentación
 src/
   config.js              banderas de secciones + conexión Supabase + login
@@ -327,7 +328,10 @@ Pruebas automatizadas de extremo a extremo con Playwright contra un **Supabase s
 | Clientes: crear con foto | ✅ |
 | La web refleja orden, precios, ocultos y nuevos | ✅ |
 | Celular 390 px sin desplazamiento horizontal | ✅ |
-| `supabase/esquema.sql` parsea sin errores (60 sentencias, `pglast`) | ✅ |
+| `supabase/esquema.sql` corre en Postgres (PGlite) **dos veces seguidas** sin errores (idempotente) | ✅ |
+| Base: el trigger bloquea el elemento que pasa el máximo; el `check` bloquea un texto de 300 caracteres | ✅ |
+| Panel: al llegar al máximo se desactiva "nuevo" y muestra "4 de 4 usados"; al eliminar se reactiva | ✅ |
+| Panel: reemplazar o eliminar borra la foto vieja del almacenamiento; fotos externas no se tocan | ✅ |
 
 **Pendiente de probar con el Supabase real** (después de §8): login, subida de fotos al bucket, RLS (intentar editar sin sesión debe fallar).
 Prueba rápida de RLS desde la consola del navegador en la web pública:
@@ -350,13 +354,54 @@ await fetch(SUPABASE_URL + '/rest/v1/favoritos', { method: 'POST', headers: { ap
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Supabase gratis **pausa** el proyecto tras ~7 días sin actividad | El panel no funciona hasta reactivarlo | La web **sigue mostrando** los datos de respaldo de `src/data/negocio.js`. Reactivar con un clic en el dashboard, o plan Pro (USD 25/mes), o un ping semanal programado |
+| Supabase gratis **pausa** el proyecto tras ~7 días sin actividad | El panel no funciona hasta reactivarlo | Revisión semanal automática (§12.1). Si aun así se pausa, la web **sigue mostrando** los datos de respaldo y se reactiva con un clic |
 | Datos de respaldo desactualizados | Si Supabase cae, se ven los datos del código | Actualizar `src/data/negocio.js` de vez en cuando |
 | Una sola página (SPA) con rutas `#` | SEO limitado para páginas internas | Hoy solo hay inicio; el título y la descripción están en `app.html`. Para SEO por destino se migraría a rutas reales + prerender |
 | Fotos de ejemplo de Unsplash | No son fotos propias | El gerente las reemplaza desde el panel |
 | Calificación de Google (4.3 / 24) fija en el código | Puede desactualizarse | Actualizar en `negocio.js` o integrar Places API más adelante |
 | Clave inicial débil | Acceso no autorizado | Aviso obligatorio + cambiar el día 1 |
 | Fotos de clientes | Privacidad | Pedir permiso antes de publicar (indicado en el panel) |
+
+### 12.1 Protecciones para funcionar los 365 días
+
+Mecanismos que ya están en el código para que la web no se llene, no se ponga lenta y no se caiga
+aunque nadie la revise:
+
+| Protección | Dónde | Qué evita |
+|---|---|---|
+| **Máximo de elementos:** 6 favoritos · 24 fotos de viajes · 12 opiniones | Panel (`LIMITES` en `src/config.js`) **y** base de datos (trigger `limitar_filas`) | Que se suban fotos sin control y la web se vuelva pesada. Al llegar al máximo, el botón "nuevo" se desactiva y el panel muestra "X de Y usados" |
+| **Fotos comprimidas antes de subir:** lado máximo 1200 px, peso ≤ 300 KB (baja la calidad hasta lograrlo) | Navegador del gerente (`leerImagen`) | Fotos de 5–10 MB del celular. 42 fotos × 300 KB ≈ **13 MB en total** |
+| **Solo JPG, PNG o WEBP, de hasta 25 MB** | Panel | Archivos que no son fotos o que el celular no puede procesar |
+| **Tope de 2 MB por archivo y tipos permitidos** | Bucket `fotos` de Supabase | Que alguien suba archivos grandes saltándose el panel |
+| **Borrado de fotos huérfanas:** al eliminar un elemento, al reemplazar su foto o al cancelar un formulario | Panel (`borrarFoto`) | Que el almacenamiento se llene de fotos que ya no se usan |
+| **Largo máximo de textos** (nombre 40, detalle 80, opinión 280, etc.) con contador | Panel **y** base de datos (`check`) | Textos larguísimos que rompen el diseño |
+| **La web nunca muestra más del máximo** | `Web.jsx` | Aunque la base tuviera más filas, el diseño no se rompe |
+| **Foto rota → se oculta** y queda el fondo de color | `Web.jsx` (`sinFoto`) | Que aparezca el ícono de imagen rota |
+| **Si la base no responde, se ven los datos de respaldo** | `lib/contenido.jsx` | Que la web quede vacía o con error si Supabase se cae |
+| **Revisión semanal automática** (lunes): consulta la base y comprueba que la web responda | `.github/workflows/mantener-activo.yml` | Que Supabase pause el proyecto por inactividad. Si algo falla, GitHub envía un correo |
+| **Clave inicial obligatoria de cambiar** | Panel | Acceso con `admin/admin` |
+
+Si se quiere cambiar un máximo, se cambia en **los dos lugares**: `LIMITES` en `src/config.js` y el número del
+trigger en `supabase/esquema.sql` (y se vuelve a correr esa parte en el SQL Editor).
+
+**Revisión semanal: respaldo.** GitHub desactiva los flujos programados de un repo público tras 60 días sin commits
+(avisa por correo; se reactiva con un clic en *Actions*). Como respaldo se puede crear en cPanel →
+*Trabajos de cron* una tarea semanal que haga lo mismo:
+
+```
+17 8 * * 1  curl -s "https://<proyecto>.supabase.co/rest/v1/horario?select=dia_idx&limit=1" -H "apikey: <anon-key>" > /dev/null
+```
+
+**Consumo estimado con estos límites** (plan gratuito de Supabase; confirmar las cifras vigentes en supabase.com/pricing):
+
+| Recurso | Límite del plan gratuito | Uso esperado |
+|---|---|---|
+| Almacenamiento de archivos | 1 GB | ~13 MB (1 %) |
+| Base de datos | 500 MB | < 1 MB |
+| Transferencia de fotos | ~5 GB/mes | Una visita que vea **todas** las fotos baja ~8 MB; las fotos cargan solo al acercarse (lazy) y el navegador las guarda en caché un año. Alcanza para unas **600–1.500 visitas completas al mes**. Hoy el sitio usa 177 MB/mes de transferencia en total |
+
+Si el tráfico crece mucho, la salida natural es guardar las fotos en el hosting (200 GB/mes de transferencia, §14),
+que es lo que se haría si la base pasa a cPanel (§14.4).
 
 ---
 
@@ -370,6 +415,8 @@ await fetch(SUPABASE_URL + '/rest/v1/favoritos', { method: 'POST', headers: { ap
 | Nuevo usuario del panel / clave olvidada | Desarrollador | Supabase (§8) |
 | Actualizar dependencias | Desarrollador | `npm outdated` / `npm update`, probar, build, push (cada 3–6 meses) |
 | Respaldo de contenido | Desarrollador | Supabase → Database → Backups (Pro) o exportar tablas a CSV mensualmente |
+| Revisar correo de GitHub por fallas de "Revisión semanal" | Desarrollador | Si llega, abrir Actions y ver qué falló |
+| Cambiar los máximos de fotos | Desarrollador | `LIMITES` en `src/config.js` + trigger en `esquema.sql` |
 
 ---
 

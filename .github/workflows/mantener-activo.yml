@@ -1,0 +1,37 @@
+# Revisión semanal automática:
+#  1. Consulta la base de Supabase para que el plan gratuito no la "pause"
+#     por inactividad (se pausa tras ~7 días sin uso).
+#  2. Comprueba que la web publicada responda.
+# Si algo falla, GitHub envía un correo al dueño del repositorio.
+#
+# Ojo: GitHub desactiva los flujos programados de un repo público después de
+# 60 días sin commits. Si eso pasa, llega un aviso por correo y se reactiva
+# con un clic en Actions. Respaldo: un "Trabajo de cron" en cPanel (ver docs).
+name: Revisión semanal
+
+on:
+  schedule:
+    - cron: '17 13 * * 1' # lunes 08:17 hora de Ecuador
+  workflow_dispatch:
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mantener activa la base de datos
+        run: |
+          URL=$(grep -oP "SUPABASE_URL = '\K[^']*" src/config.js)
+          KEY=$(grep -oP "SUPABASE_ANON_KEY = '\K[^']*" src/config.js)
+          if [ -z "$URL" ]; then echo "Supabase aún no configurado; nada que hacer."; exit 0; fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/rest/v1/horario?select=dia_idx&limit=1" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "Supabase respondió $code"
+          test "$code" = "200"
+
+      - name: Comprobar que la web responde
+        run: |
+          code=$(curl -sL -o /dev/null -w '%{http_code}' https://www.viafaecuador.com.ec/)
+          echo "viafaecuador.com.ec respondió $code"
+          test "$code" = "200"

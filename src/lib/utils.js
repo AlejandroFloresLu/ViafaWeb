@@ -49,7 +49,9 @@ export function saludo() {
 }
 
 /* Achica una imagen subida para que la demo vaya fluida y quepa en memoria. */
-export function leerImagen(file, max = 1400) {
+/* Lee una foto, la achica a `max` px y la comprime en JPEG bajando la calidad
+   hasta que pese menos de `maxKB`. Devuelve un dataURL. */
+export function leerImagen(file, max = 1400, maxKB = 300) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onerror = reject
@@ -61,8 +63,18 @@ export function leerImagen(file, max = 1400) {
         const c = document.createElement('canvas')
         c.width = Math.round(img.width * k)
         c.height = Math.round(img.height * k)
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
-        resolve(c.toDataURL('image/jpeg', 0.82))
+        const ctx = c.getContext('2d')
+        ctx.fillStyle = '#ffffff' // fondo blanco para PNG con transparencia
+        ctx.fillRect(0, 0, c.width, c.height)
+        ctx.drawImage(img, 0, 0, c.width, c.height)
+        const pesoKB = (u) => (u.length * 3) / 4 / 1024
+        let calidad = 0.82
+        let url = c.toDataURL('image/jpeg', calidad)
+        while (pesoKB(url) > maxKB && calidad > 0.45) {
+          calidad -= 0.07
+          url = c.toDataURL('image/jpeg', calidad)
+        }
+        resolve(url)
       }
       img.src = reader.result
     }

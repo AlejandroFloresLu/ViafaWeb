@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, Mail, MapPin, MessageCircle, Navigation, Phone, Quote, Star } from 'lucide-react'
 import { negocio } from '../data/negocio'
-import { MOSTRAR_DEMO, MOSTRAR_DESTINOS, MOSTRAR_PROMOCIONES } from '../config'
+import { LIMITES, MOSTRAR_DEMO, MOSTRAR_DESTINOS, MOSTRAR_PROMOCIONES } from '../config'
 import { usePublicaciones } from '../lib/publicaciones'
 import { useContenido } from '../lib/contenido'
 import { PostCard } from '../components/PostCard'
@@ -17,7 +17,12 @@ import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, pr
 export function Web() {
   const n = negocio
   const demo = usePublicaciones()
-  const { destinos, favoritos, galeriaViajes, testimonios, promociones, horario, recargar } = useContenido()
+  const c = useContenido()
+  const { destinos, promociones, horario, recargar } = c
+  // Nunca se muestran más de los límites, aunque la base tenga más filas.
+  const favoritos = c.favoritos.slice(0, LIMITES.favoritos)
+  const galeriaViajes = c.galeriaViajes.slice(0, LIMITES.viajes)
+  const testimonios = c.testimonios.slice(0, LIMITES.clientes)
   const irA = useIrA()
 
   useBajarASeccion()
@@ -108,7 +113,7 @@ export function Web() {
               const destino = paginaDe(f)
               const contenido = (
                 <>
-                  <img src={f.foto} alt={f.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
+                  <img onError={sinFoto} src={f.foto} alt={f.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   <span className="absolute left-4 top-4 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">#{i + 1} más vendido</span>
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-paper">
@@ -197,7 +202,7 @@ export function Web() {
           <div className="mt-10 columns-2 gap-3 md:columns-3 lg:columns-4">
             {galeriaViajes.map((g, i) => (
               <figure key={g.id} className={`group relative mb-3 break-inside-avoid overflow-hidden bg-paper-3 ${COLLAGE[i % COLLAGE.length]}`}>
-                <img src={g.foto} alt={g.lugar || 'Viaje de Viafa'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" loading="lazy" />
+                <img onError={sinFoto} src={g.foto} alt={g.lugar || 'Viaje de Viafa'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" loading="lazy" />
                 {g.lugar && (
                   <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pb-3 pt-10 text-[13px] font-medium text-paper">
                     {g.lugar}
@@ -219,7 +224,7 @@ export function Web() {
               <figure key={t.id} className="mb-5 break-inside-avoid bg-white/70 ring-1 ring-line">
                 {t.foto && (
                   <div className={`overflow-hidden bg-paper-3 ${i % 3 === 1 ? 'aspect-square' : 'aspect-[4/5]'}`}>
-                    <img src={t.foto} alt={`${t.autor} de viaje`} className="h-full w-full object-cover" loading="lazy" />
+                    <img onError={sinFoto} src={t.foto} alt={`${t.autor} de viaje`} className="h-full w-full object-cover" loading="lazy" />
                   </div>
                 )}
                 <div className="p-5">
@@ -243,6 +248,12 @@ export function Web() {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Si una foto no carga (enlace roto, sin internet), se oculta y queda el fondo
+   de color en su lugar en vez del ícono de imagen rota. */
+const sinFoto = (e) => {
+  e.currentTarget.style.visibility = 'hidden'
+}
+
 /* Proporciones del collage de "lugares que visitó viafa" (se repiten en este orden).
    Es un collage tipo "masonry": funciona con cualquier cantidad de fotos. */
 const COLLAGE = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-square', 'aspect-[3/4]', 'aspect-[16/10]', 'aspect-[4/5]', 'aspect-square']

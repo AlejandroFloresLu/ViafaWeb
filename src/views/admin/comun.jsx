@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, ImagePlus, X } from 'lucide-react'
 import { leerImagen } from '../../lib/utils'
 import { subirFoto } from '../../lib/supabase'
+import { FOTO } from '../../config'
 
 /* Elegir una foto desde el celular o la compu: la achica y la sube a Supabase.
    Llama onCambio(urlPublica) cuando termina. */
@@ -12,15 +13,16 @@ export function SelectorFoto({ valor, onCambio, carpeta, aspecto = 'aspect-[4/3]
 
   const elegir = async (file) => {
     if (!file) return
-    if (!file.type.startsWith('image/')) return setError('ese archivo no es una imagen.')
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return setError('usa una foto JPG, PNG o WEBP.')
+    if (file.size > FOTO.archivoMaximoMB * 1024 * 1024) return setError(`la foto pesa más de ${FOTO.archivoMaximoMB} MB. usa una más liviana.`)
     setError('')
     setSubiendo(true)
     try {
-      const dataUrl = await leerImagen(file, 1600)
+      const dataUrl = await leerImagen(file, FOTO.ladoMaximo, FOTO.pesoMaximoKB)
       onCambio(await subirFoto(dataUrl, carpeta))
     } catch (e) {
       console.error(e)
-      setError('no se pudo subir la foto. revisa tu conexión e intenta de nuevo.')
+      setError('no se pudo leer o subir la foto. prueba con otra (JPG) o revisa tu conexión.')
     } finally {
       setSubiendo(false)
       if (ref.current) ref.current.value = ''
@@ -45,7 +47,7 @@ export function SelectorFoto({ valor, onCambio, carpeta, aspecto = 'aspect-[4/3]
           <ImagePlus size={14} /> {subiendo ? 'subiendo foto…' : valor ? 'cambiar foto' : 'subir foto'}
         </span>
       </button>
-      <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => elegir(e.target.files?.[0])} />
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => elegir(e.target.files?.[0])} />
       {error && <p className="mt-2 text-[13px] text-clay">{error}</p>}
     </div>
   )

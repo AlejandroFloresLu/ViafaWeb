@@ -110,6 +110,50 @@ create table if not exists public.horario (
 );
 
 -- ---------------------------------------------------------------------------
+-- 2b. LÍMITES (para que la web funcione todo el año sin sorpresas)
+--     Iguales a LIMITES en src/config.js. El panel ya los respeta; aquí la
+--     base los hace obligatorios aunque alguien intente saltarse el panel.
+-- ---------------------------------------------------------------------------
+create or replace function public.limitar_filas()
+returns trigger
+language plpgsql
+as $$
+declare
+  maximo int := tg_argv[0]::int;
+  total  int;
+begin
+  execute format('select count(*) from %I.%I', tg_table_schema, tg_table_name) into total;
+  if total >= maximo then
+    raise exception 'límite alcanzado: máximo % filas en %', maximo, tg_table_name;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists limite on public.favoritos;
+create trigger limite before insert on public.favoritos
+  for each row execute function public.limitar_filas('6');
+drop trigger if exists limite on public.viajes_galeria;
+create trigger limite before insert on public.viajes_galeria
+  for each row execute function public.limitar_filas('24');
+drop trigger if exists limite on public.testimonios;
+create trigger limite before insert on public.testimonios
+  for each row execute function public.limitar_filas('12');
+
+-- Largo máximo de los textos (igual que en el panel)
+alter table public.favoritos drop constraint if exists favoritos_largos;
+alter table public.favoritos add constraint favoritos_largos check (
+  char_length(nombre) <= 40 and char_length(region) <= 30 and char_length(detalle) <= 80
+  and precio between 0 and 99999 and char_length(foto) <= 500);
+alter table public.viajes_galeria drop constraint if exists viajes_largos;
+alter table public.viajes_galeria add constraint viajes_largos check (
+  char_length(lugar) <= 40 and char_length(foto) <= 500);
+alter table public.testimonios drop constraint if exists testimonios_largos;
+alter table public.testimonios add constraint testimonios_largos check (
+  char_length(autor) <= 50 and char_length(viaje) <= 40 and char_length(texto) <= 280
+  and char_length(foto) <= 500);
+
+-- ---------------------------------------------------------------------------
 -- 3. SEGURIDAD (Row Level Security)
 --    Todos pueden LEER lo visible. Solo los administradores pueden ESCRIBIR.
 -- ---------------------------------------------------------------------------
@@ -172,9 +216,14 @@ create policy "editar testimonios" on public.testimonios
 --    Carpeta pública "fotos" (fotos y PDFs de destinos): todos las ven,
 --    solo administradores suben/borran.
 -- ---------------------------------------------------------------------------
-insert into storage.buckets (id, name, public)
-values ('fotos', 'fotos', true)
-on conflict (id) do update set public = true;
+-- Máximo 2 MB por archivo y solo imágenes (y PDF para las fichas de destinos).
+-- El panel sube fotos de ~300 KB, así que este tope solo frena abusos.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fotos', 'fotos', true, 2097152, array['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "fotos: subir" on storage.objects;
 create policy "fotos: subir" on storage.objects
