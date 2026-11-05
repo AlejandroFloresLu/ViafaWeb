@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, Mail, MapPin, Menu, MessageCircle, Navigation, Phone, Quote, Star, X } from 'lucide-react'
 import { negocio } from '../data/negocio'
+import { MOSTRAR_DEMO } from '../config'
 import { usePublicaciones } from '../lib/publicaciones'
 import { PostCard } from '../components/PostCard'
 import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, precio, whatsapp } from '../lib/utils'
@@ -31,7 +32,7 @@ export function Web() {
   const masVendidos = n.carta.filter((d) => d.masVendido)
 
   return (
-    <div className="min-h-dvh bg-paper pb-24 text-ink">
+    <div className={`min-h-dvh bg-paper text-ink ${MOSTRAR_DEMO ? 'pb-24' : ''}`}>
       {/* Cinta superior */}
       <div className="bg-olive px-4 py-2 text-center text-[12px] text-paper/85">
         {abierto ? 'atendiendo ahora' : 'cerrado ahora'} · hoy de {h.abre} a {h.cierra} · quicentro sur ·{' '}
@@ -403,8 +404,8 @@ function Footer({ cotizar }) {
       </div>
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-[12px] text-paper/50 sm:px-8">
-          <span>© {new Date().getFullYear()} {n.nombreLargo} · demo con datos de ejemplo</span>
-          <Link to="/panel" className="hover:text-paper">acceso agencia</Link>
+          <span>© {new Date().getFullYear()} {n.nombreLargo} </span>
+          {MOSTRAR_DEMO && <Link to="/panel" className="hover:text-paper">acceso agencia</Link>}
         </div>
       </div>
     </footer>

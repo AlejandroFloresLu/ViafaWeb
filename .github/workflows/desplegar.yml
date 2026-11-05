@@ -1,0 +1,57 @@
+# Publica la web en el hosting de Viafa (cPanel) por FTP
+# cada vez que se sube un cambio a la rama main.
+#
+# Necesita 3 secretos en GitHub (Settings → Secrets and variables → Actions):
+#   FTP_SERVER    ftp.viafaecuador.com.ec
+#   FTP_USERNAME  el usuario FTP creado en cPanel (ej. web@viafaecuador.com.ec)
+#   FTP_PASSWORD  su clave
+# Mientras no existan, este flujo no hace nada.
+name: Desplegar en viafaecuador.com.ec
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: desplegar
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+    steps:
+      - name: ¿Hay acceso FTP configurado?
+        if: env.FTP_SERVER == ''
+        run: echo "Sin secretos FTP todavía; no se despliega."
+
+      - uses: actions/checkout@v4
+        if: env.FTP_SERVER != ''
+
+      - uses: actions/setup-node@v4
+        if: env.FTP_SERVER != ''
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Compilar
+        if: env.FTP_SERVER != ''
+        run: |
+          npm ci
+          npm run build
+          mkdir -p publicar
+          cp index.html publicar/index.html
+          cp public/robots.txt publicar/robots.txt
+
+      - name: Subir por FTP
+        if: env.FTP_SERVER != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./publicar/
+          server-dir: ./

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PublicacionesProvider } from './lib/publicaciones'
 import { DemoBar } from './components/DemoBar'
+import { MOSTRAR_DEMO } from './config'
 import { Web } from './views/Web'
 import { Panel } from './views/Panel'
 import { Publicar } from './views/Publicar'
@@ -31,7 +32,7 @@ export default function App() {
           <Route path="/panel/publicar" element={<Publicar />} />
           <Route path="*" element={<Navigate to="/web" replace />} />
         </Routes>
-        <DemoBar />
+        {MOSTRAR_DEMO && <DemoBar />}
       </PublicacionesProvider>
     </HashRouter>
   )

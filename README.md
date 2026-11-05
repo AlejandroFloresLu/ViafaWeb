@@ -35,3 +35,42 @@ Todo el contenido se edita en `src/data/negocio.js`. Los colores, en `src/index.
 Después de editar, corre `npm run build`: actualiza `index.html` (la página en línea) y `viafa-demo.html`.
 Sube los cambios a `main` y GitHub Pages se actualiza solo en 1–2 minutos.
 El código fuente entra por `app.html`; no edites `index.html` a mano.
+
+---
+
+## Publicar en viafaecuador.com.ec (cPanel + GitHub)
+
+Una sola vez. Después, cada cambio que subas a `main` se publica solo en 1–2 minutos.
+
+### 1. Respaldo de la web actual (Joomla)
+1. Entra a **https://cpanel.viafaecuador.com.ec**.
+2. Busca **"Respaldo" / "Backup"** → **"Descargar una copia de seguridad completa"** (o "Respaldo del directorio de inicio")
+   y también la **base de datos MySQL** de Joomla. Guarda los archivos en tu compu.
+3. En **"Administrador de archivos" / "File Manager"** crea la carpeta **`joomla-viejo`** **fuera** de `public_html`
+   (al mismo nivel que `public_html`).
+4. Entra a `public_html`, selecciona todo **menos** `.well-known` y `cgi-bin`, y **muévelo** a `joomla-viejo`.
+   `public_html` queda vacía (si algo sale mal, lo regresas en un minuto).
+
+### 2. Usuario FTP solo para la web
+1. En cPanel → **"Cuentas FTP"**.
+2. Usuario: `web` · clave segura · **Directorio: `public_html`** (importante: que apunte ahí).
+3. Anota el usuario completo (ej. `web@viafaecuador.com.ec`).
+
+### 3. Secretos en GitHub
+Repo → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Nombre | Valor |
+|---|---|
+| `FTP_SERVER` | `ftp.viafaecuador.com.ec` |
+| `FTP_USERNAME` | el usuario del paso 2 |
+| `FTP_PASSWORD` | su clave |
+
+### 4. Desplegar
+Repo → **Actions → "Desplegar en viafaecuador.com.ec" → Run workflow** (o sube cualquier cambio a `main`).
+Cuando termine en verde, abre **https://www.viafaecuador.com.ec**.
+
+> Si falla al conectar, cambia `protocol: ftps` por `protocol: ftp` en `.github/workflows/desplegar.yml`.
+
+### Modo demo
+En `src/config.js`, `MOSTRAR_DEMO = true` muestra la barra "su web · su panel · publicar" para presentar.
+En la web publicada debe quedar en `false`.
