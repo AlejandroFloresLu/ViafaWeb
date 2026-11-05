@@ -54,11 +54,12 @@ export function Web() {
         <a href={cotizar()} target="_blank" rel="noreferrer" className="underline underline-offset-2">cotiza por whatsapp</a>
       </div>
 
+      <SiteNav />
+
       {/* Portada a sangre */}
-      <header className="relative h-[86svh] min-h-[560px] w-full overflow-hidden bg-olive">
+      <header className="relative h-[78svh] min-h-[520px] w-full overflow-hidden bg-olive">
         <img src={n.fotos.portada} alt="Playa con palmeras" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/5 to-black/55" />
-        <SiteNav variante="sobre" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/55" />
         <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-6xl px-5 pb-14 sm:px-8 sm:pb-20">
           <p className="eyebrow text-paper/85">{n.tipo} · {n.sector}</p>
           <h1 className="mt-3 max-w-[15ch] text-[44px] font-medium leading-[1.02] tracking-[-0.02em] text-paper sm:text-[68px]">{n.frase}</h1>

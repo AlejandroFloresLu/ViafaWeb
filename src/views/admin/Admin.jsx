@@ -6,6 +6,7 @@ import { supabase, supabaseListo } from '../../lib/supabase'
 import { AdminPromos } from './AdminPromos'
 import { AdminDestinos } from './AdminDestinos'
 import { AdminHorario } from './AdminHorario'
+import logo from '../../assets/logo.png'
 
 /* ==========================================================================
    PANEL REAL DE VIAFA  (/#/panel)
@@ -120,8 +121,8 @@ function Pantalla({ children }) {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-paper px-5 text-ink">
       <div className="w-full max-w-sm">
-        <p className="text-[26px] font-semibold tracking-[-0.03em]">{negocio.nombre}<span className="text-sun">.</span></p>
-        <p className="text-[13px] text-ink-3">panel de la agencia</p>
+        <img src={logo} alt="Viafa Agencia de Viajes" className="h-14 w-auto" />
+        <p className="mt-2 text-[13px] text-ink-3">panel de la agencia</p>
         <div className="mt-8">{children}</div>
       </div>
     </div>

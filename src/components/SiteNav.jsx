@@ -5,12 +5,12 @@ import { negocio } from '../data/negocio'
 import { useContenido } from '../lib/contenido'
 import { porRegion, useIrA } from '../lib/navegacion'
 import { whatsapp } from '../lib/utils'
+import logoBlanco from '../assets/logo-blanco.png'
+import logo from '../assets/logo.png'
 
-/* Menú principal, igual al de su web actual:
-   inicio · nosotros · destinos ▾ (por región) · contáctenos · cotice ahora
-   variante "sobre"  → transparente, encima de la foto de portada
-   variante "solida" → barra azul fija arriba (páginas interiores) */
-export function SiteNav({ variante = 'solida' }) {
+/* Menú principal, igual al de su web actual: barra azul fija con el logo
+   inicio · nosotros · destinos ▾ (por región) · contáctenos · cotice ahora */
+export function SiteNav() {
   const { destinos } = useContenido()
   const irA = useIrA()
   const { pathname } = useLocation()
@@ -37,14 +37,13 @@ export function SiteNav({ variante = 'solida' }) {
     }
   }, [mega])
 
-  const sobre = variante === 'sobre'
   const enlace = 'text-[13px] uppercase tracking-[0.12em] opacity-90 hover:opacity-100'
 
   return (
-    <nav ref={cajaRef} className={sobre ? 'absolute inset-x-0 top-0 z-30 text-paper' : 'sticky top-0 z-30 bg-olive text-paper shadow-[0_6px_20px_-12px_rgba(0,0,0,0.5)]'}>
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-        <Link to="/web" className="text-[24px] font-semibold tracking-[-0.03em]">
-          {negocio.nombre}<span className="text-sun">.</span>
+    <nav ref={cajaRef} className="sticky top-0 z-30 bg-olive text-paper shadow-[0_6px_20px_-12px_rgba(0,0,0,0.5)]">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 sm:px-8">
+        <Link to="/web" aria-label={`${negocio.nombreLargo} · inicio`} className="shrink-0">
+          <img src={logoBlanco} alt="Viafa Agencia de Viajes" className="h-11 w-auto sm:h-[52px]" />
         </Link>
 
         {/* Escritorio */}
@@ -98,7 +97,7 @@ export function SiteNav({ variante = 'solida' }) {
       {movil && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-paper px-5 py-5 text-ink lg:hidden">
           <div className="flex items-center justify-between">
-            <span className="text-[24px] font-semibold tracking-[-0.03em]">{negocio.nombre}<span className="text-sun">.</span></span>
+            <img src={logo} alt="Viafa Agencia de Viajes" className="h-11 w-auto" />
             <button type="button" aria-label="Cerrar menú" onClick={() => setMovil(false)} className="p-1"><X size={24} /></button>
           </div>
           <div className="mt-10 flex flex-col gap-4 text-[28px] font-medium tracking-[-0.02em]">
