@@ -290,6 +290,17 @@ Si se prefiere **privado**: el despliegue FTP sigue funcionando igual; solo se p
 - **Correo:** no se toca. Los buzones (webmail) y los registros MX siguen igual; la migración solo cambia archivos de `public_html`.
 - **Dominio y DNS:** no se tocan.
 
+### 10.0 Cuidado con el correo (mismo cPanel)
+
+Este cPanel también maneja **11 cuentas de correo** de Viafa (1,25 GB). La migración solo toca `public_html`; el correo vive en otra carpeta (`mail/`) y en los registros DNS. Para no afectarlo:
+
+- **No mover ni borrar nada fuera de `public_html`** (en especial `mail/`, `etc/`, `ssl/`). `joomla-viejo` se crea al lado, sin tocar lo demás.
+- **No tocar** *Zone Editor* (DNS), registros **MX / SPF / DKIM**, *Email Routing* ni las cuentas de correo.
+- Dejar `public_html/.well-known` en su lugar (lo usa AutoSSL para el certificado).
+- **No restaurar un respaldo completo** de JetBackup para revertir la web: también restauraría el correo y se perderían los mensajes recibidos después de ese respaldo. Para revertir, usar solo *Home Directory* → `public_html`, o el plan de reversa de abajo.
+- La cuenta FTP de despliegue apunta **solo** a `public_html`, así que GitHub no puede llegar al correo.
+- Después de publicar, enviar y recibir un correo de prueba (webmail).
+
 ### 10.1 Plan de reversa (rollback, ~5 min)
 
 1. Administrador de archivos → vaciar `public_html` (dejar `.well-known` y `cgi-bin`).
@@ -395,6 +406,12 @@ documento ni en el repositorio (el repo es público): las custodia Viafa.
 | Espacio de bases de datos | 27 MB | 18,65 GB | 0,1 % | ✅ |
 | **Cantidad de bases MySQL** | **2** | **2** | **100 %** | ⚠️ **No se puede crear otra** |
 | Cuentas FTP, correo, subdominios | — | ilimitado | — | ✅ |
+
+**Costos:** estos límites son los **incluidos en el plan contratado** (se leen del propio cPanel). En este tipo de hosting
+compartido (CloudLinux) normalmente no se cobra por uso: si se llega a un límite, el servidor **frena** la cuenta
+(o, con el ancho de banda, puede suspenderla) en vez de facturar extra. Aun así, **confirmar con quien factura el hosting**
+el precio del plan, la fecha de renovación y si hay cargos por exceso. La web nueva consume **menos** que Joomla
+(es estática: no ejecuta PHP ni consulta MySQL en cada visita).
 
 **Conclusión:** el hosting tiene espacio y recursos de sobra para la web nueva. La web compilada pesa ~0,3 MB y,
 aun con cientos de fotos del panel (~200–400 KB cada una, ya redimensionadas), se usarían pocos cientos de MB.
