@@ -404,18 +404,18 @@ El único límite es la **cantidad de bases de datos**.
 
 | Base | Tamaño | Uso probable |
 |---|---|---|
-| `jonrprja_2019` | 27 MB | Base del sitio **Joomla actual**. No tocar hasta terminar y verificar la migración |
-| `jonrprja_2024` | **0 bytes (vacía)** | Sin uso aparente |
+| `‹usuario›_2019` | 27 MB | Base del sitio **Joomla actual**. No tocar hasta terminar y verificar la migración |
+| `‹usuario›_2024` | **0 bytes (vacía)** | Sin uso aparente |
 
-Usuarios MySQL existentes: `jonrprja_2019`, `jonrprja_2024`, `jonrprja_joom413`. Los usuarios no cuentan para el límite.
+Usuarios MySQL existentes: `‹usuario›_2019`, `‹usuario›_2024`, `‹usuario›_joom413`. Los usuarios no cuentan para el límite.
 
 ### 14.4 Si la base de datos va en cPanel (en lugar de Supabase)
 
 Como no se puede crear una tercera base, hay tres caminos (de más a menos recomendado):
 
-1. **Usar `jonrprja_2024`**, que está vacía, con un **usuario MySQL nuevo** solo para la web
+1. **Usar `‹usuario›_2024`**, que está vacía, con un **usuario MySQL nuevo** solo para la web
    (privilegios: SELECT, INSERT, UPDATE, DELETE). Antes, confirmar con Viafa que nadie la usa.
-2. **Después de la migración**, respaldar y liberar `jonrprja_2019` (Joomla) para dejar un cupo libre.
+2. **Después de la migración**, respaldar y liberar `‹usuario›_2019` (Joomla) para dejar un cupo libre.
    Recién cuando la web nueva lleve 1–2 meses estable.
 3. Pedir a Interserver que **aumente el límite** de bases.
 
