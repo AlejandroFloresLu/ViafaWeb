@@ -3,8 +3,8 @@
 Nueva web de **viafaecuador.com.ec** con panel de administración para el gerente.
 Colores de la marca: azul rey `#0A0A98`, naranja `#F7941D` y azul mar `#0A6898`.
 
-📄 **Documentación técnica completa (arquitectura, seguridad, Supabase, GitHub y migración desde Joomla):**
-[`docs/DOCUMENTACION_TECNICA.md`](docs/DOCUMENTACION_TECNICA.md)
+📄 **Documentación técnica completa (arquitectura, seguridad, base de datos en Supabase, GitHub y migración desde Joomla):**
+[`docs/Viafa_Documentacion_Tecnica.docx`](docs/Viafa_Documentacion_Tecnica.docx) (Word)
 
 - Vista previa: https://alejandrofloreslu.github.io/ViafaWeb/
 - Panel: `/admin` (en la vista previa: https://alejandrofloreslu.github.io/ViafaWeb/admin/)
@@ -48,7 +48,7 @@ El código fuente entra por `app.html`. Siempre `npm run build` antes de hacer c
 3. **GitHub:** secretos `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` → Actions → *Run workflow*.
 4. Entrar a `/admin` y **cambiar la clave**.
 
-Los pasos detallados, verificación y plan de reversa están en la [documentación técnica](docs/DOCUMENTACION_TECNICA.md).
+Los pasos detallados, verificación y plan de reversa están en la [documentación técnica](docs/Viafa_Documentacion_Tecnica.docx).
 
 ## Modo demo
 `MOSTRAR_DEMO = true` en `src/config.js` muestra la barra "su web · su panel · publicar" con un panel simulado
