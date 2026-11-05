@@ -41,9 +41,10 @@ jobs:
         run: |
           npm ci
           npm run build
-          mkdir -p publicar
+          mkdir -p publicar/panel
           cp index.html publicar/index.html
           cp public/robots.txt publicar/robots.txt
+          cp public/panel/index.html publicar/panel/index.html
 
       - name: Subir por FTP
         if: env.FTP_SERVER != ''

@@ -1,16 +1,22 @@
 import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PublicacionesProvider } from './lib/publicaciones'
+import { ContenidoProvider } from './lib/contenido'
 import { DemoBar } from './components/DemoBar'
 import { MOSTRAR_DEMO } from './config'
 import { Web } from './views/Web'
 import { Panel } from './views/Panel'
 import { Publicar } from './views/Publicar'
+import { Admin } from './views/admin/Admin'
 
-/* La demo es un solo flujo:
-   1. /web             → la web del local, conectada a Google Maps
-   2. /panel           → el panel del dueño con sus métricas
-   3. /panel/publicar  → publica una promoción y mírala en la web     */
+/* Rutas
+   /web     → la web de Viafa (lee destinos, promos y horario de Supabase)
+   /panel   → PANEL REAL con login (promociones, destinos, horario)
+
+   Con MOSTRAR_DEMO = true (modo presentación):
+   /panel           → panel SIMULADO con métricas de ejemplo
+   /panel/publicar  → "publicar" simulado
+   + la barra flotante "su web · su panel · publicar"                    */
 
 function ScrollArriba() {
   const { pathname, search } = useLocation()
@@ -23,17 +29,25 @@ function ScrollArriba() {
 export default function App() {
   return (
     <HashRouter>
-      <PublicacionesProvider>
-        <ScrollArriba />
-        <Routes>
-          <Route path="/" element={<Navigate to="/web" replace />} />
-          <Route path="/web" element={<Web />} />
-          <Route path="/panel" element={<Panel />} />
-          <Route path="/panel/publicar" element={<Publicar />} />
-          <Route path="*" element={<Navigate to="/web" replace />} />
-        </Routes>
-        {MOSTRAR_DEMO && <DemoBar />}
-      </PublicacionesProvider>
+      <ContenidoProvider>
+        <PublicacionesProvider>
+          <ScrollArriba />
+          <Routes>
+            <Route path="/" element={<Navigate to="/web" replace />} />
+            <Route path="/web" element={<Web />} />
+            {MOSTRAR_DEMO ? (
+              <>
+                <Route path="/panel" element={<Panel />} />
+                <Route path="/panel/publicar" element={<Publicar />} />
+              </>
+            ) : (
+              <Route path="/panel/*" element={<Admin />} />
+            )}
+            <Route path="*" element={<Navigate to="/web" replace />} />
+          </Routes>
+          {MOSTRAR_DEMO && <DemoBar />}
+        </PublicacionesProvider>
+      </ContenidoProvider>
     </HashRouter>
   )
 }

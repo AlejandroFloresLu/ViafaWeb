@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, Mail, MapPin, Menu, MessageCircle, Navigation
 import { negocio } from '../data/negocio'
 import { MOSTRAR_DEMO } from '../config'
 import { usePublicaciones } from '../lib/publicaciones'
+import { useContenido } from '../lib/contenido'
 import { PostCard } from '../components/PostCard'
 import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, precio, whatsapp } from '../lib/utils'
 
@@ -12,10 +13,19 @@ import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, pr
    ========================================================================== */
 export function Web() {
   const n = negocio
-  const { lista, ultima } = usePublicaciones()
+  const demo = usePublicaciones()
+  const { destinos, promociones, horario, recargar } = useContenido()
+
+  // Trae lo último de la base de datos cada vez que se abre la web
+  useEffect(() => {
+    recargar()
+  }, [recargar])
+  // En modo demo, las promos salen del "publicar" simulado; si no, de la base de datos.
+  const lista = MOSTRAR_DEMO ? demo.lista : promociones
+  const ultima = MOSTRAR_DEMO ? demo.ultima : null
   const { search } = useLocation()
-  const abierto = abiertoAhora()
-  const h = hoy()
+  const abierto = abiertoAhora(horario)
+  const h = hoy(horario)
 
   useEffect(() => {
     document.title = `${n.nombreLargo} · ${n.frase}`
@@ -29,13 +39,13 @@ export function Web() {
   }, [search])
 
   const cotizar = (destino) => whatsapp(destino ? `Hola Viafa 👋 quiero cotizar un viaje a ${destino}.` : 'Hola Viafa 👋 quiero cotizar un viaje.')
-  const masVendidos = n.carta.filter((d) => d.masVendido)
+  const masVendidos = destinos.filter((d) => d.masVendido).slice(0, 3)
 
   return (
     <div className={`min-h-dvh bg-paper text-ink ${MOSTRAR_DEMO ? 'pb-24' : ''}`}>
       {/* Cinta superior */}
       <div className="bg-olive px-4 py-2 text-center text-[12px] text-paper/85">
-        {abierto ? 'atendiendo ahora' : 'cerrado ahora'} · hoy de {h.abre} a {h.cierra} · quicentro sur ·{' '}
+        {abierto ? 'atendiendo ahora' : 'cerrado ahora'} · {h.cerrado ? 'hoy no atendemos' : `hoy de ${h.abre} a ${h.cierra}`} · quicentro sur ·{' '}
         <a href={cotizar()} target="_blank" rel="noreferrer" className="underline underline-offset-2">cotiza por whatsapp</a>
       </div>
 
@@ -97,26 +107,28 @@ export function Web() {
         </div>
       </section>
 
-      {/* Promociones */}
-      <section id="promociones" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow text-ink-3">promociones</p>
-            <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">lo nuevo este mes.</h2>
+      {/* Promociones (se ocultan si no hay ninguna) */}
+      {lista.length > 0 && (
+        <section id="promociones" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="eyebrow text-ink-3">promociones</p>
+              <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">lo nuevo este mes.</h2>
+            </div>
+            <a href={cotizar()} target="_blank" rel="noreferrer" className="hidden items-center gap-1.5 text-[13px] text-ink-2 hover:text-ink sm:inline-flex">
+              pregunta por más promos <ArrowUpRight size={14} />
+            </a>
           </div>
-          <a href={cotizar()} target="_blank" rel="noreferrer" className="hidden items-center gap-1.5 text-[13px] text-ink-2 hover:text-ink sm:inline-flex">
-            pregunta por más promos <ArrowUpRight size={14} />
-          </a>
-        </div>
-        <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {lista.slice(0, 3).map((p) => (
-            <PostCard key={p.id} post={p} destacada={p.id === ultima} />
-          ))}
-        </div>
-      </section>
+          <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {lista.slice(0, 3).map((p) => (
+              <PostCard key={p.id} post={p} destacada={p.id === ultima} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Todos los destinos */}
-      <Destinos cotizar={cotizar} />
+      <Destinos cotizar={cotizar} destinos={destinos} />
 
       {/* Banda foto */}
       <section className="relative mt-28 min-h-[420px] overflow-hidden bg-olive sm:mt-36">
@@ -163,17 +175,17 @@ export function Web() {
         </div>
       </section>
 
-      <Visitanos />
+      <Visitanos horario={horario} />
       <Footer cotizar={cotizar()} />
     </div>
   )
 }
 
 /* ---------------------------------------------------------------------- */
-function Destinos({ cotizar }) {
-  const regiones = useMemo(() => ['todos', ...new Set(negocio.carta.map((d) => d.region))], [])
+function Destinos({ cotizar, destinos }) {
+  const regiones = useMemo(() => ['todos', ...new Set(destinos.map((d) => d.region))], [destinos])
   const [reg, setReg] = useState('todos')
-  const lista = negocio.carta.filter((d) => reg === 'todos' || d.region === reg)
+  const lista = destinos.filter((d) => reg === 'todos' || d.region === reg)
   return (
     <section id="destinos" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -287,9 +299,9 @@ function GoogleG({ className = 'size-5' }) {
   )
 }
 
-function Visitanos() {
+function Visitanos({ horario }) {
   const n = negocio
-  const h = hoy()
+  const h = hoy(horario)
   return (
     <section id="visitanos" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
       <p className="eyebrow text-ink-3">visítanos</p>
@@ -332,10 +344,10 @@ function Visitanos() {
           {/* Horario y contacto */}
           <div>
             <ul className="divide-y divide-line border-y border-line text-[14px]">
-              {n.horario.map((d, i) => (
+              {horario.map((d, i) => (
                 <li key={d.dia} className={`flex justify-between py-2.5 ${i === h.indice ? 'font-semibold text-ink' : 'text-ink-2'}`}>
                   <span>{d.dia}{i === h.indice ? ' · hoy' : ''}</span>
-                  <span className="tabular-nums">{d.abre} — {d.cierra}</span>
+                  <span className="tabular-nums">{d.cerrado ? 'cerrado' : `${d.abre} — ${d.cierra}`}</span>
                 </li>
               ))}
             </ul>

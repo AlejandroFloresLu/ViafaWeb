@@ -28,13 +28,14 @@ const min = (hhmm) => {
   return h * 60 + m
 }
 
-export function hoy() {
+export function hoy(horario = negocio.horario) {
   const i = (new Date().getDay() + 6) % 7 // 0 = lunes
-  return { indice: i, ...negocio.horario[i] }
+  return { cerrado: false, ...horario[i], indice: i }
 }
 
-export function abiertoAhora() {
-  const h = hoy()
+export function abiertoAhora(horario = negocio.horario) {
+  const h = hoy(horario)
+  if (h.cerrado) return false
   const d = new Date()
   const ahora = d.getHours() * 60 + d.getMinutes()
   return ahora >= min(h.abre) && ahora < min(h.cierra)

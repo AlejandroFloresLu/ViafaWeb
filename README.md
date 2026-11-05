@@ -74,3 +74,37 @@ Cuando termine en verde, abre **https://www.viafaecuador.com.ec**.
 ### Modo demo
 En `src/config.js`, `MOSTRAR_DEMO = true` muestra la barra "su web · su panel · publicar" para presentar.
 En la web publicada debe quedar en `false`.
+
+---
+
+## Panel de administración (para que Viafa edite sin depender de nadie)
+
+En **`/panel`** (o `viafaecuador.com.ec/panel`) Viafa entra con su correo y clave y puede:
+- **publicar promociones** con foto (o ocultarlas / borrarlas),
+- **cambiar destinos**: foto, precio, detalle, "más vendido", visible u oculto, agregar nuevos,
+- **cambiar el horario** (incluye marcar días cerrados).
+
+Los cambios se ven en la web al instante. Los datos y fotos se guardan en **Supabase** (gratis).
+Mientras Supabase no esté configurado, la web usa los datos de `src/data/negocio.js` y el panel avisa que falta conectarlo.
+
+### Configurar Supabase (una sola vez, ~15 minutos)
+1. Crea una cuenta en **https://supabase.com** → **New project**
+   (nombre: `viafa`, región: la más cercana, por ej. *South America (São Paulo)*; guarda la clave de la base de datos).
+2. **SQL Editor → New query**: pega todo el archivo **`supabase/esquema.sql`**.
+   Antes de correrlo, **cambia `santiago@viafaecuador.com.ec` por el correo real de Santiago**. Luego **Run**.
+   Eso crea las tablas, la seguridad, la carpeta de fotos y carga los destinos/promos/horario actuales.
+3. **Authentication → Users → Add user → Create new user**: el mismo correo de Santiago + una clave.
+   Marca **"Auto Confirm User"**.
+4. **Authentication → Sign In / Providers → Email**: desactiva **"Allow new users to sign up"**
+   (así nadie más puede crearse una cuenta).
+5. **Project Settings → API**: copia **Project URL** y la **anon public key** y pégalos en
+   **`src/config.js`** (`SUPABASE_URL` y `SUPABASE_ANON_KEY`).
+6. `npm run build`, sube a `main` y listo: se publica solo.
+
+**¿Otra persona de Viafa también edita?** Agrega su correo en la tabla `administradores`
+(Table Editor) y créale el usuario como en el paso 3.
+**¿Olvidó su clave?** Authentication → Users → el usuario → **Send password recovery** o cambia la clave ahí.
+
+> En el plan gratis, Supabase puede pausar un proyecto que pasa varios días sin actividad.
+> Si pasara, la web sigue mostrando los datos de `src/data/negocio.js` y el proyecto se reactiva
+> con un clic en el dashboard de Supabase.
