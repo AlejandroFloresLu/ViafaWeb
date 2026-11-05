@@ -5,11 +5,13 @@ import { negocio } from '../data/negocio'
 import { useContenido } from '../lib/contenido'
 import { porRegion, useIrA } from '../lib/navegacion'
 import { whatsapp } from '../lib/utils'
+import { MOSTRAR_DESTINOS } from '../config'
 import logoBlanco from '../assets/logo-blanco.png'
 import logo from '../assets/logo.png'
 
-/* Menú principal, igual al de su web actual: barra azul fija con el logo
-   inicio · nosotros · destinos ▾ (por región) · contáctenos · cotice ahora */
+/* Menú principal: barra azul fija con el logo
+   inicio · nosotros · favoritos · viajes · clientes · contáctenos · cotice ahora
+   Con MOSTRAR_DESTINOS = true aparece además "destinos ▾" (por región). */
 export function SiteNav() {
   const { destinos } = useContenido()
   const irA = useIrA()
@@ -50,9 +52,15 @@ export function SiteNav() {
         <div className="hidden items-center gap-7 lg:flex">
           <Link to="/web" className={enlace}>inicio</Link>
           <button type="button" onClick={() => irA('nosotros')} className={enlace}>nosotros</button>
-          <button type="button" onClick={() => setMega((m) => !m)} aria-expanded={mega} className={`${enlace} inline-flex items-center gap-1`}>
-            destinos <ChevronDown size={14} className={`transition-transform ${mega ? 'rotate-180' : ''}`} />
-          </button>
+          {MOSTRAR_DESTINOS ? (
+            <button type="button" onClick={() => setMega((m) => !m)} aria-expanded={mega} className={`${enlace} inline-flex items-center gap-1`}>
+              destinos <ChevronDown size={14} className={`transition-transform ${mega ? 'rotate-180' : ''}`} />
+            </button>
+          ) : (
+            <button type="button" onClick={() => irA('favoritos')} className={enlace}>favoritos</button>
+          )}
+          <button type="button" onClick={() => irA('viajes')} className={enlace}>viajes</button>
+          <button type="button" onClick={() => irA('clientes')} className={enlace}>clientes</button>
           <button type="button" onClick={() => irA('visitanos')} className={enlace}>contáctenos</button>
           <a href={cotizar} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center bg-sun px-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
             cotice ahora
@@ -65,7 +73,7 @@ export function SiteNav() {
       </div>
 
       {/* Menú de destinos (escritorio) */}
-      {mega && (
+      {MOSTRAR_DESTINOS && mega && (
         <div className="absolute inset-x-0 top-full hidden lg:block">
           <div className="mx-auto max-w-6xl px-8">
             <div className="rise grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-8 bg-ink p-8 text-paper shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]">
@@ -103,9 +111,15 @@ export function SiteNav() {
           <div className="mt-10 flex flex-col gap-4 text-[28px] font-medium tracking-[-0.02em]">
             <Link to="/web" onClick={() => setMovil(false)}>inicio</Link>
             <button type="button" className="text-left" onClick={() => { setMovil(false); irA('nosotros') }}>nosotros</button>
-            <Link to="/destinos" onClick={() => setMovil(false)}>destinos</Link>
+            {MOSTRAR_DESTINOS ? (
+              <Link to="/destinos" onClick={() => setMovil(false)}>destinos</Link>
+            ) : (
+              <button type="button" className="text-left" onClick={() => { setMovil(false); irA('favoritos') }}>favoritos</button>
+            )}
+            <button type="button" className="text-left" onClick={() => { setMovil(false); irA('viajes') }}>viajes</button>
+            <button type="button" className="text-left" onClick={() => { setMovil(false); irA('clientes') }}>clientes</button>
           </div>
-          <div className="mt-3 space-y-5 border-l-2 border-sun pl-4">
+          {MOSTRAR_DESTINOS && <div className="mt-3 space-y-5 border-l-2 border-sun pl-4">
             {grupos.map((g) => (
               <div key={g.region}>
                 <p className="eyebrow text-ink-3">{g.region}</p>
@@ -116,7 +130,7 @@ export function SiteNav() {
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
           <div className="mt-6 flex flex-col gap-4 text-[28px] font-medium tracking-[-0.02em]">
             <button type="button" className="text-left" onClick={() => { setMovil(false); irA('visitanos') }}>contáctenos</button>
             <a href={cotizar} target="_blank" rel="noreferrer" className="text-clay">cotice ahora</a>

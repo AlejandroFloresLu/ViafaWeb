@@ -2,13 +2,13 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, Mail, MapPin, MessageCircle, Navigation, Phone, Quote, Star } from 'lucide-react'
 import { negocio } from '../data/negocio'
-import { MOSTRAR_DEMO } from '../config'
+import { MOSTRAR_DEMO, MOSTRAR_DESTINOS, MOSTRAR_PROMOCIONES } from '../config'
 import { usePublicaciones } from '../lib/publicaciones'
 import { useContenido } from '../lib/contenido'
 import { PostCard } from '../components/PostCard'
 import { SiteNav } from '../components/SiteNav'
 import { SiteFooter } from '../components/SiteFooter'
-import { useBajarASeccion } from '../lib/navegacion'
+import { useBajarASeccion, useIrA } from '../lib/navegacion'
 import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, precio, whatsapp } from '../lib/utils'
 
 /* ==========================================================================
@@ -17,7 +17,8 @@ import { abiertoAhora, hoy, mapaComoLlegar, mapaEmbed, mapaFicha, mapaResena, pr
 export function Web() {
   const n = negocio
   const demo = usePublicaciones()
-  const { destinos, promociones, horario, recargar } = useContenido()
+  const { destinos, favoritos, galeriaViajes, testimonios, promociones, horario, recargar } = useContenido()
+  const irA = useIrA()
 
   useBajarASeccion()
 
@@ -26,7 +27,7 @@ export function Web() {
     recargar()
   }, [recargar])
   // En modo demo, las promos salen del "publicar" simulado; si no, de la base de datos.
-  const lista = MOSTRAR_DEMO ? demo.lista : promociones
+  const lista = MOSTRAR_DEMO ? demo.lista : MOSTRAR_PROMOCIONES ? promociones : []
   const ultima = MOSTRAR_DEMO ? demo.ultima : null
   const { search } = useLocation()
   const abierto = abiertoAhora(horario)
@@ -44,7 +45,9 @@ export function Web() {
   }, [search])
 
   const cotizar = (destino) => whatsapp(destino ? `Hola Viafa 👋 quiero cotizar un viaje a ${destino}.` : 'Hola Viafa 👋 quiero cotizar un viaje.')
-  const masVendidos = destinos.filter((d) => d.masVendido).slice(0, 3)
+  // Si las páginas de destinos están activas y hay uno con el mismo nombre, la tarjeta lleva ahí;
+  // si no, abre WhatsApp para cotizar.
+  const paginaDe = (f) => (MOSTRAR_DESTINOS ? destinos.find((d) => d.nombre === f.nombre) : null)
 
   return (
     <div className={`min-h-dvh bg-paper text-ink ${MOSTRAR_DEMO ? 'pb-24' : ''}`}>
@@ -64,9 +67,15 @@ export function Web() {
           <p className="eyebrow text-paper/85">{n.tipo} · {n.sector}</p>
           <h1 className="mt-3 max-w-[15ch] text-[44px] font-medium leading-[1.02] tracking-[-0.02em] text-paper sm:text-[68px]">{n.frase}</h1>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/destinos" className="inline-flex h-11 items-center bg-sun px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
-              ver destinos
-            </Link>
+            {MOSTRAR_DESTINOS ? (
+              <Link to="/destinos" className="inline-flex h-11 items-center bg-sun px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
+                ver destinos
+              </Link>
+            ) : (
+              <button type="button" onClick={() => irA('favoritos')} className="inline-flex h-11 items-center bg-sun px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink hover:brightness-105">
+                ver favoritos
+              </button>
+            )}
             <a href={cotizar()} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center gap-2 border border-paper/70 px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-paper hover:bg-paper/10">
               <MessageCircle size={14} /> cotizar gratis
             </a>
@@ -89,32 +98,47 @@ export function Web() {
         </div>
       </section>
 
-      {/* Los más vendidos */}
-      <section id="mas-vendidos" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-20 sm:px-8 sm:pt-28">
-        <p className="eyebrow text-ink-3">los más vendidos</p>
-        <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">los favoritos de quito.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {masVendidos.map((d, i) => (
-            <Link key={d.id} to={`/destinos/${d.id}`} className="group relative min-h-[420px] overflow-hidden bg-paper-3">
-              <img src={d.foto} alt={d.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <span className="absolute left-4 top-4 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">#{i + 1} más vendido</span>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-paper">
-                <p className="eyebrow text-paper/75">{d.region}</p>
-                <p className="mt-2 text-[28px] font-medium leading-tight tracking-[-0.02em]">{d.nombre}</p>
-                <p className="mt-1 text-[13px] text-paper/80">{d.detalle}</p>
-                <p className="mt-4 flex items-center justify-between">
-                  <span className="text-[14px]">desde <span className="text-[22px] font-medium">{precio(d.precio)}</span></span>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em]">ver destino <ArrowRight size={14} /></span>
-                </p>
-              </div>
+      {/* Los favoritos de Quito (los edita el gerente en /admin) */}
+      {favoritos.length > 0 && (
+        <section id="favoritos" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-20 sm:px-8 sm:pt-28">
+          <p className="eyebrow text-ink-3">los más vendidos</p>
+          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">los favoritos de quito.</h2>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {favoritos.map((f, i) => {
+              const destino = paginaDe(f)
+              const contenido = (
+                <>
+                  <img src={f.foto} alt={f.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <span className="absolute left-4 top-4 bg-sun px-2.5 py-1 text-[11px] font-semibold tracking-wide text-ink">#{i + 1} más vendido</span>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-paper">
+                    {f.region && <p className="eyebrow text-paper/75">{f.region}</p>}
+                    <p className="mt-2 text-[28px] font-medium leading-tight tracking-[-0.02em]">{f.nombre}</p>
+                    {f.detalle && <p className="mt-1 text-[13px] text-paper/80">{f.detalle}</p>}
+                    <p className="mt-4 flex items-center justify-between gap-3">
+                      {f.precio > 0 ? <span className="text-[14px]">desde <span className="text-[22px] font-medium">{precio(f.precio)}</span></span> : <span />}
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em]">
+                        {destino ? 'ver destino' : 'cotizar'} <ArrowRight size={14} />
+                      </span>
+                    </p>
+                  </div>
+                </>
+              )
+              const clase = 'group relative min-h-[420px] overflow-hidden bg-paper-3'
+              return destino ? (
+                <Link key={f.id} to={`/destinos/${destino.id}`} className={clase}>{contenido}</Link>
+              ) : (
+                <a key={f.id} href={cotizar(f.nombre)} target="_blank" rel="noreferrer" className={clase}>{contenido}</a>
+              )
+            })}
+          </div>
+          {MOSTRAR_DESTINOS && (
+            <Link to="/destinos" className="mt-8 inline-flex items-center gap-2 border-b border-ink/30 pb-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] hover:border-ink">
+              ver todos los destinos <ArrowRight size={14} />
             </Link>
-          ))}
-        </div>
-        <Link to="/destinos" className="mt-8 inline-flex items-center gap-2 border-b border-ink/30 pb-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] hover:border-ink">
-          ver todos los destinos <ArrowRight size={14} />
-        </Link>
-      </section>
+          )}
+        </section>
+      )}
 
       {/* Promociones (se ocultan si no hay ninguna) */}
       {lista.length > 0 && (
@@ -165,22 +189,52 @@ export function Web() {
         </div>
       </section>
 
-      {/* Referencias */}
-      <section id="referencias" className="mx-auto max-w-6xl scroll-mt-6 px-5 pt-24 sm:px-8 sm:pt-32">
-        <p className="eyebrow text-ink-3">referencias</p>
-        <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">viajeros que ya volvieron.</h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {n.referencias.map((r) => (
-            <figure key={r.autor} className="flex flex-col border-t-2 border-olive pt-6">
-              <Quote size={22} className="text-sun" />
-              <blockquote className="mt-4 flex-1 text-[17px] leading-relaxed">“{r.texto}”</blockquote>
-              <figcaption className="mt-5 text-[13px] text-ink-2">
-                <span className="font-semibold text-ink">{r.autor}</span> · viajó a {r.viaje}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
+      {/* Lugares que visitó Viafa — collage (lo edita el gerente en /admin) */}
+      {galeriaViajes.length > 0 && (
+        <section id="viajes" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-24 sm:px-8 sm:pt-32">
+          <p className="eyebrow text-ink-3">nuestros viajes</p>
+          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">lugares que visitó viafa.</h2>
+          <div className="mt-10 columns-2 gap-3 md:columns-3 lg:columns-4">
+            {galeriaViajes.map((g, i) => (
+              <figure key={g.id} className={`group relative mb-3 break-inside-avoid overflow-hidden bg-paper-3 ${COLLAGE[i % COLLAGE.length]}`}>
+                <img src={g.foto} alt={g.lugar || 'Viaje de Viafa'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" loading="lazy" />
+                {g.lugar && (
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pb-3 pt-10 text-[13px] font-medium text-paper">
+                    {g.lugar}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Esto dicen nuestros clientes — collage de fotos con su opinión (lo edita el gerente en /admin) */}
+      {testimonios.length > 0 && (
+        <section id="clientes" className="mx-auto max-w-6xl scroll-mt-28 px-5 pt-24 sm:px-8 sm:pt-32">
+          <p className="eyebrow text-ink-3">nuestros clientes</p>
+          <h2 className="mt-2 text-[32px] font-medium tracking-[-0.02em] sm:text-[40px]">esto dicen nuestros clientes.</h2>
+          <div className="mt-10 gap-5 sm:columns-2 lg:columns-3">
+            {testimonios.map((t, i) => (
+              <figure key={t.id} className="mb-5 break-inside-avoid bg-white/70 ring-1 ring-line">
+                {t.foto && (
+                  <div className={`overflow-hidden bg-paper-3 ${i % 3 === 1 ? 'aspect-square' : 'aspect-[4/5]'}`}>
+                    <img src={t.foto} alt={`${t.autor} de viaje`} className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                )}
+                <div className="p-5">
+                  <Quote size={20} className="text-sun" />
+                  <blockquote className="mt-3 text-[16px] leading-relaxed">“{t.texto}”</blockquote>
+                  <figcaption className="mt-4 text-[13px] text-ink-2">
+                    <span className="font-semibold text-ink">{t.autor}</span>
+                    {t.viaje && <> · viajó a {t.viaje}</>}
+                  </figcaption>
+                </div>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Visitanos horario={horario} />
       <SiteFooter />
@@ -189,6 +243,10 @@ export function Web() {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Proporciones del collage de "lugares que visitó viafa" (se repiten en este orden).
+   Es un collage tipo "masonry": funciona con cualquier cantidad de fotos. */
+const COLLAGE = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-square', 'aspect-[3/4]', 'aspect-[16/10]', 'aspect-[4/5]', 'aspect-square']
+
 function Estrellas({ valor, size = 14 }) {
   return (
     <span className="inline-flex gap-0.5" aria-label={`${valor} de 5 estrellas`}>

@@ -7,14 +7,16 @@
 -- ---------------------------------------------------------------------------
 -- 1. QUIÉN PUEDE EDITAR
 --    Solo los correos de esta tabla pueden cambiar contenido.
---    👉 Cambia el correo de abajo por el de Santiago (y agrega más si hace falta).
+--    El panel /admin convierte el USUARIO en correo:  admin → admin@viafaecuador.com.ec
+--    Para dar acceso a otra persona: crea su usuario en Authentication → Users
+--    y agrega aquí su correo (ej. 'santiago@viafaecuador.com.ec').
 -- ---------------------------------------------------------------------------
 create table if not exists public.administradores (
   email text primary key
 );
 
 insert into public.administradores (email) values
-  ('santiago@viafaecuador.com.ec')   -- 👈 CAMBIAR por el correo real
+  ('admin@viafaecuador.com.ec')      -- usuario "admin" del panel
 on conflict do nothing;
 
 create or replace function public.es_admin()
@@ -64,6 +66,41 @@ create table if not exists public.promociones (
   creado_en  timestamptz not null default now()
 );
 
+-- Los favoritos de Quito (tarjetas "los más vendidos" del inicio)
+create table if not exists public.favoritos (
+  id         uuid primary key default gen_random_uuid(),
+  nombre     text not null,
+  region     text not null default '',
+  detalle    text not null default '',
+  precio     numeric(10,2) not null default 0,
+  foto       text not null default '',
+  orden      int not null default 0,
+  visible    boolean not null default true,
+  creado_en  timestamptz not null default now()
+);
+
+-- Lugares que visitó Viafa (collage de fotos)
+create table if not exists public.viajes_galeria (
+  id         uuid primary key default gen_random_uuid(),
+  lugar      text not null default '',
+  foto       text not null,
+  orden      int not null default 0,
+  visible    boolean not null default true,
+  creado_en  timestamptz not null default now()
+);
+
+-- Esto dicen nuestros clientes (foto + opinión)
+create table if not exists public.testimonios (
+  id         uuid primary key default gen_random_uuid(),
+  autor      text not null,
+  viaje      text not null default '',
+  texto      text not null,
+  foto       text not null default '',
+  orden      int not null default 0,
+  visible    boolean not null default true,
+  creado_en  timestamptz not null default now()
+);
+
 create table if not exists public.horario (
   dia_idx  int primary key check (dia_idx between 0 and 6),  -- 0 = lunes
   dia      text not null,
@@ -80,6 +117,9 @@ alter table public.administradores enable row level security;
 alter table public.destinos        enable row level security;
 alter table public.promociones     enable row level security;
 alter table public.horario         enable row level security;
+alter table public.favoritos       enable row level security;
+alter table public.viajes_galeria  enable row level security;
+alter table public.testimonios     enable row level security;
 
 drop policy if exists "admins se ven" on public.administradores;
 create policy "admins se ven" on public.administradores
@@ -104,6 +144,27 @@ create policy "leer horario" on public.horario
   for select using (true);
 drop policy if exists "editar horario" on public.horario;
 create policy "editar horario" on public.horario
+  for all using (public.es_admin()) with check (public.es_admin());
+
+drop policy if exists "leer favoritos" on public.favoritos;
+create policy "leer favoritos" on public.favoritos
+  for select using (visible or public.es_admin());
+drop policy if exists "editar favoritos" on public.favoritos;
+create policy "editar favoritos" on public.favoritos
+  for all using (public.es_admin()) with check (public.es_admin());
+
+drop policy if exists "leer viajes" on public.viajes_galeria;
+create policy "leer viajes" on public.viajes_galeria
+  for select using (visible or public.es_admin());
+drop policy if exists "editar viajes" on public.viajes_galeria;
+create policy "editar viajes" on public.viajes_galeria
+  for all using (public.es_admin()) with check (public.es_admin());
+
+drop policy if exists "leer testimonios" on public.testimonios;
+create policy "leer testimonios" on public.testimonios
+  for select using (visible or public.es_admin());
+drop policy if exists "editar testimonios" on public.testimonios;
+create policy "editar testimonios" on public.testimonios
   for all using (public.es_admin()) with check (public.es_admin());
 
 -- ---------------------------------------------------------------------------
@@ -164,3 +225,33 @@ select * from (values
   ('nuevo', 'nuevo: buenos aires + cataratas.', 'el combo más pedido de sudamérica: ciudad, tango y las cataratas del iguazú en un solo viaje.', 'https://images.unsplash.com/photo-1538703012804-b74999aa11b9?w=1200&q=75&auto=format&fit=crop', 'este mes')
 ) as v(categoria, titulo, texto, foto, vigencia)
 where not exists (select 1 from public.promociones);
+
+insert into public.favoritos (nombre, region, detalle, precio, foto, orden)
+select * from (values
+  ('punta cana', 'caribe', '5 noches · todo incluido · vuelo + hotel + traslados', 1290, 'https://images.unsplash.com/photo-1705507972578-78537a2dda73?w=1400&q=75&auto=format&fit=crop', 1),
+  ('cartagena', 'caribe', '4 noches · hotel en ciudad amurallada · desayunos', 690, 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1400&q=75&auto=format&fit=crop', 2),
+  ('buenos aires + iguazú', 'sudamérica', '7 noches · city tour + cataratas · vuelos internos', 1450, 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1400&q=75&auto=format&fit=crop', 3)
+) as v(nombre, region, detalle, precio, foto, orden)
+where not exists (select 1 from public.favoritos);
+
+insert into public.viajes_galeria (lugar, foto, orden)
+select * from (values
+  ('galápagos', 'https://images.unsplash.com/photo-1595517930215-d2778a56ac93?w=1200&q=75&auto=format&fit=crop', 1),
+  ('cartagena', 'https://images.unsplash.com/photo-1536308037887-165852797016?w=1000&q=75&auto=format&fit=crop', 2),
+  ('cataratas del iguazú', 'https://images.unsplash.com/photo-1590246185449-e9e2ddd683bb?w=1000&q=75&auto=format&fit=crop', 3),
+  ('punta cana', 'https://images.unsplash.com/photo-1637576305711-23d3b0f72881?w=1000&q=75&auto=format&fit=crop', 4),
+  ('chichén itzá', 'https://images.unsplash.com/photo-1568402102990-bc541580b59f?w=1000&q=75&auto=format&fit=crop', 5),
+  ('buenos aires', 'https://images.unsplash.com/photo-1679417302656-9b5170584526?w=1000&q=75&auto=format&fit=crop', 6),
+  ('isla saona', 'https://images.unsplash.com/photo-1669517270484-df54ad8d54c8?w=1000&q=75&auto=format&fit=crop', 7),
+  ('salida grupal', 'https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=1000&q=75&auto=format&fit=crop', 8)
+) as v(lugar, foto, orden)
+where not exists (select 1 from public.viajes_galeria);
+
+insert into public.testimonios (autor, viaje, texto, foto, orden)
+select * from (values
+  ('familia Andrade', 'punta cana', 'Era nuestro primer viaje con los niños y nos sentimos acompañados en todo momento.', 'https://images.unsplash.com/photo-1721840432289-d0041522103d?w=1000&q=75&auto=format&fit=crop', 1),
+  ('Paola y Luis', 'cartagena', 'La luna de miel que soñábamos. El hotel en la ciudad amurallada fue un acierto.', 'https://images.unsplash.com/photo-1568050878862-c8b4bdc99bc3?w=1000&q=75&auto=format&fit=crop', 2),
+  ('grupo de amigos del sur', 'galápagos', 'Organizaron todo para 18 personas sin un solo problema. Ya estamos planeando el próximo.', 'https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=1000&q=75&auto=format&fit=crop', 3),
+  ('familia Ortiz', 'cancún', 'Nos ayudaron a pagar en cuotas y el hotel todo incluido superó lo que esperábamos.', 'https://images.unsplash.com/photo-1576696058573-12b47c49559e?w=1000&q=75&auto=format&fit=crop', 4)
+) as v(autor, viaje, texto, foto, orden)
+where not exists (select 1 from public.testimonios);

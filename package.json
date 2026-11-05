@@ -6,16 +6,14 @@
   "description": "Demo de rediseño web para Viafa Agencia de Viajes",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const f=require('fs');f.copyFileSync('dist/app.html','index.html');f.copyFileSync('dist/app.html','viafa-demo.html')\"",
+    "build": "vite build && node -e \"const f=require('fs');f.copyFileSync('dist/app.html','index.html');f.copyFileSync('dist/app.html','viafa-demo.html');f.mkdirSync('admin',{recursive:true});f.copyFileSync('public/admin/index.html','admin/index.html')\"",
     "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.454.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.27.0"
   },
   "devDependencies": {

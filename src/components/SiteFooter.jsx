@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { negocio } from '../data/negocio'
-import { MOSTRAR_DEMO } from '../config'
+import { MOSTRAR_DEMO, MOSTRAR_DESTINOS, MOSTRAR_PROMOCIONES } from '../config'
 import { useIrA } from '../lib/navegacion'
 import { mapaFicha, whatsapp } from '../lib/utils'
 
@@ -18,8 +18,14 @@ export function SiteFooter() {
           <p className="mt-3 leading-relaxed">{n.telefonos.join(' · ')} · {n.celular}<br />{n.email}</p>
         </div>
         <div className="space-y-2">
-          <Link to="/destinos" className={boton}>destinos</Link>
-          <button type="button" onClick={() => irA('promociones')} className={boton}>promociones</button>
+          {MOSTRAR_DESTINOS ? (
+            <Link to="/destinos" className={boton}>destinos</Link>
+          ) : (
+            <button type="button" onClick={() => irA('favoritos')} className={boton}>los favoritos</button>
+          )}
+          {MOSTRAR_PROMOCIONES && <button type="button" onClick={() => irA('promociones')} className={boton}>promociones</button>}
+          <button type="button" onClick={() => irA('viajes')} className={boton}>lugares que visitamos</button>
+          <button type="button" onClick={() => irA('clientes')} className={boton}>nuestros clientes</button>
           <button type="button" onClick={() => irA('nosotros')} className={boton}>nosotros</button>
           <button type="button" onClick={() => irA('visitanos')} className={boton}>contáctenos</button>
         </div>

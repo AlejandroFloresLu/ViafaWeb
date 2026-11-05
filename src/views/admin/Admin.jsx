@@ -1,31 +1,46 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, CalendarClock, LogOut, Megaphone, Plane } from 'lucide-react'
+import { ArrowUpRight, CalendarClock, Camera, KeyRound, LogOut, Megaphone, MessageSquareQuote, Plane, Star, TriangleAlert } from 'lucide-react'
 import { negocio } from '../../data/negocio'
 import { supabase, supabaseListo } from '../../lib/supabase'
 import { AdminPromos } from './AdminPromos'
 import { AdminDestinos } from './AdminDestinos'
 import { AdminHorario } from './AdminHorario'
+import { AdminColeccion } from './AdminColeccion'
+import { AdminCuenta } from './AdminCuenta'
+import { ADMIN_DOMINIO, CLAVE_SUFIJO, MOSTRAR_DESTINOS, MOSTRAR_PROMOCIONES } from '../../config'
 import logo from '../../assets/logo.png'
 
 /* ==========================================================================
-   PANEL REAL DE VIAFA  (/#/panel)
-   Login con correo y clave → promociones, destinos y horario.
-   Solo pueden editar los correos de la tabla "administradores" (Supabase).
+   PANEL DEL GERENTE  (/admin  →  /#/admin)
+   Login con usuario y clave → favoritos, lugares visitados, clientes,
+   horario y cambio de clave. Solo pueden editar los correos de la tabla
+   "administradores" de Supabase (lo comprueba la base, no solo la web).
    ========================================================================== */
 
 const SECCIONES = [
-  { id: 'promos', label: 'promociones', icon: Megaphone },
-  { id: 'destinos', label: 'destinos', icon: Plane },
+  { id: 'favoritos', label: 'favoritos', icon: Star },
+  { id: 'viajes', label: 'lugares visitados', icon: Camera },
+  { id: 'clientes', label: 'clientes', icon: MessageSquareQuote },
+  ...(MOSTRAR_PROMOCIONES ? [{ id: 'promos', label: 'promociones', icon: Megaphone }] : []),
+  ...(MOSTRAR_DESTINOS ? [{ id: 'destinos', label: 'destinos', icon: Plane }] : []),
   { id: 'horario', label: 'horario', icon: CalendarClock },
+  { id: 'cuenta', label: 'mi cuenta', icon: KeyRound },
 ]
+
+/* "admin" → "admin@viafaecuador.com.ec"  (si ya escriben un correo, se respeta) */
+export const aCorreo = (usuario) => {
+  const u = usuario.trim().toLowerCase()
+  return u.includes('@') ? u : `${u}@${ADMIN_DOMINIO}`
+}
+const aUsuario = (email) => (email.endsWith(`@${ADMIN_DOMINIO}`) ? email.split('@')[0] : email)
 
 export function Admin() {
   const [sesion, setSesion] = useState(undefined) // undefined = cargando
   const [esAdmin, setEsAdmin] = useState(null)
 
   useEffect(() => {
-    document.title = `panel · ${negocio.nombreLargo}`
+    document.title = `admin · ${negocio.nombreLargo}`
     if (!supabase) return
     supabase.auth.getSession().then(({ data }) => setSesion(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSesion(s))
@@ -44,12 +59,13 @@ export function Admin() {
   if (sesion === undefined || (sesion && esAdmin === null)) return <Pantalla><p className="text-[15px] text-ink-2">cargando…</p></Pantalla>
   if (!sesion) return <Login />
   if (!esAdmin) return <SinPermiso email={sesion.user.email} />
-  return <Panel email={sesion.user.email} />
+  return <Panel usuario={aUsuario(sesion.user.email)} claveInicial={sesion.user.user_metadata?.clave_inicial !== false} />
 }
 
 /* ---------------------------------------------------------------------- */
-function Panel({ email }) {
-  const [sec, setSec] = useState('promos')
+function Panel({ usuario, claveInicial }) {
+  const [sec, setSec] = useState('favoritos')
+  const email = usuario
   return (
     <div className="min-h-dvh bg-paper text-ink lg:grid lg:grid-cols-[232px_1fr]">
       <aside className="hidden border-r border-line lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-between lg:px-5 lg:py-6">
@@ -91,7 +107,7 @@ function Panel({ email }) {
             <button type="button" onClick={() => supabase.auth.signOut()} aria-label="Salir"><LogOut size={16} /></button>
           </div>
         </div>
-        <nav className="mt-3 flex gap-6 px-5">
+        <nav className="mt-3 flex gap-6 overflow-x-auto whitespace-nowrap px-5">
           {SECCIONES.map(({ id, label }) => (
             <button
               key={id}
@@ -107,6 +123,15 @@ function Panel({ email }) {
 
       <main className="min-w-0 px-5 pb-20 pt-8 sm:px-8 lg:px-12 lg:pt-10">
         <div className="mx-auto max-w-5xl">
+          {claveInicial && sec !== 'cuenta' && (
+            <div className="mb-8 flex flex-wrap items-center gap-3 border-l-4 border-sun bg-sun/10 px-4 py-3 text-[14px]">
+              <TriangleAlert size={18} className="shrink-0 text-clay" />
+              <span className="flex-1">estás usando la clave inicial. cámbiala por una tuya antes de seguir.</span>
+              <button type="button" onClick={() => setSec('cuenta')} className="text-[12px] font-semibold uppercase tracking-[0.12em] underline underline-offset-4">cambiar clave</button>
+            </div>
+          )}
+          {['favoritos', 'viajes', 'clientes'].includes(sec) && <AdminColeccion key={sec} tipo={sec} />}
+          {sec === 'cuenta' && <AdminCuenta usuario={usuario} />}
           {sec === 'promos' && <AdminPromos />}
           {sec === 'destinos' && <AdminDestinos />}
           {sec === 'horario' && <AdminHorario />}
@@ -122,7 +147,7 @@ function Pantalla({ children }) {
     <div className="flex min-h-dvh items-center justify-center bg-paper px-5 text-ink">
       <div className="w-full max-w-sm">
         <img src={logo} alt="Viafa Agencia de Viajes" className="h-14 w-auto" />
-        <p className="mt-2 text-[13px] text-ink-3">panel de la agencia</p>
+        <p className="mt-2 text-[13px] text-ink-3">panel de administración</p>
         <div className="mt-8">{children}</div>
       </div>
     </div>
@@ -130,7 +155,7 @@ function Pantalla({ children }) {
 }
 
 function Login() {
-  const [email, setEmail] = useState('')
+  const [usuario, setUsuario] = useState('')
   const [clave, setClave] = useState('')
   const [error, setError] = useState('')
   const [entrando, setEntrando] = useState(false)
@@ -139,17 +164,17 @@ function Login() {
     e.preventDefault()
     setError('')
     setEntrando(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: clave })
+    const { error } = await supabase.auth.signInWithPassword({ email: aCorreo(usuario), password: clave + CLAVE_SUFIJO })
     setEntrando(false)
-    if (error) setError('correo o clave incorrectos.')
+    if (error) setError('usuario o clave incorrectos.')
   }
 
   return (
     <Pantalla>
       <form onSubmit={entrar} className="space-y-4">
         <label className="block">
-          <span className="text-[13px] text-ink-2">correo</span>
-          <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5 h-12 w-full border border-line bg-white px-3.5 text-[16px] outline-none focus:border-ink" />
+          <span className="text-[13px] text-ink-2">usuario</span>
+          <input type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required value={usuario} onChange={(e) => setUsuario(e.target.value)} className="mt-1.5 h-12 w-full border border-line bg-white px-3.5 text-[16px] outline-none focus:border-ink" />
         </label>
         <label className="block">
           <span className="text-[13px] text-ink-2">clave</span>

@@ -128,11 +128,24 @@ export const negocio = {
     { autor: 'Diego P.', estrellas: 5, texto: 'Excelente atención en Quicentro Sur. Nos ayudaron hasta con un cambio de vuelo a última hora.', hace: 'hace 2 semanas' },
   ],
 
-  // Referencias / testimonios — DE EJEMPLO
+  // "Esto dicen nuestros clientes" — DE EJEMPLO (el gerente los cambia desde /admin)
   referencias: [
-    { autor: 'familia Andrade', viaje: 'punta cana', texto: 'Era nuestro primer viaje con los niños y nos sentimos acompañados en todo momento.' },
-    { autor: 'Paola y Luis', viaje: 'cartagena', texto: 'La luna de miel que soñábamos. El hotel en la ciudad amurallada fue un acierto.' },
-    { autor: 'Grupo de jubilados del sur', viaje: 'galápagos', texto: 'Organizaron todo para 18 personas sin un solo problema. Ya estamos planeando el próximo.' },
+    { autor: 'familia Andrade', viaje: 'punta cana', texto: 'Era nuestro primer viaje con los niños y nos sentimos acompañados en todo momento.', foto: u('1721840432289-d0041522103d', 1000) },
+    { autor: 'Paola y Luis', viaje: 'cartagena', texto: 'La luna de miel que soñábamos. El hotel en la ciudad amurallada fue un acierto.', foto: u('1568050878862-c8b4bdc99bc3', 1000) },
+    { autor: 'grupo de amigos del sur', viaje: 'galápagos', texto: 'Organizaron todo para 18 personas sin un solo problema. Ya estamos planeando el próximo.', foto: u('1531844251246-9a1bfaae09fc', 1000) },
+    { autor: 'familia Ortiz', viaje: 'cancún', texto: 'Nos ayudaron a pagar en cuotas y el hotel todo incluido superó lo que esperábamos.', foto: u('1576696058573-12b47c49559e', 1000) },
+  ],
+
+  // "Lugares que visitó Viafa" — collage de fotos (DE EJEMPLO; el gerente las cambia desde /admin)
+  galeriaViajes: [
+    { lugar: 'galápagos', foto: u('1595517930215-d2778a56ac93', 1200) },
+    { lugar: 'cartagena', foto: u('1536308037887-165852797016', 1000) },
+    { lugar: 'cataratas del iguazú', foto: u('1590246185449-e9e2ddd683bb', 1000) },
+    { lugar: 'punta cana', foto: u('1637576305711-23d3b0f72881', 1000) },
+    { lugar: 'chichén itzá', foto: u('1568402102990-bc541580b59f', 1000) },
+    { lugar: 'buenos aires', foto: u('1679417302656-9b5170584526', 1000) },
+    { lugar: 'isla saona', foto: u('1669517270484-df54ad8d54c8', 1000) },
+    { lugar: 'salida grupal', foto: u('1539635278303-d4002c07eae3', 1000) },
   ],
 }
 

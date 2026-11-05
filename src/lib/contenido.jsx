@@ -61,11 +61,28 @@ export const aPromo = (p) => ({
 
 export const aDia = (h) => ({ indice: h.dia_idx, dia: h.dia, abre: h.abre, cierra: h.cierra, cerrado: h.cerrado })
 
+/* "Los favoritos de Quito" (tarjetas del inicio) */
+export const aFavorito = (f) => ({
+  uuid: f.id, id: f.id, nombre: f.nombre, region: f.region, detalle: f.detalle,
+  precio: Number(f.precio), foto: f.foto, orden: f.orden, visible: f.visible,
+})
+/* "Lugares que visitó Viafa" (collage) */
+export const aViaje = (g) => ({ uuid: g.id, id: g.id, lugar: g.lugar, foto: g.foto, orden: g.orden, visible: g.visible })
+/* "Esto dicen nuestros clientes" */
+export const aTestimonio = (t) => ({
+  uuid: t.id, id: t.id, autor: t.autor, viaje: t.viaje, texto: t.texto, foto: t.foto, orden: t.orden, visible: t.visible,
+})
+
 const local = {
   destinos: negocio.carta.map((d) => ({ ...d, sitios: sitios[d.id] || [] })),
+  favoritos: negocio.carta.filter((d) => d.masVendido),
+  galeriaViajes: negocio.galeriaViajes.map((g, i) => ({ id: `g${i}`, ...g })),
+  testimonios: negocio.referencias.map((r, i) => ({ id: `t${i}`, ...r })),
   promociones: publicacionesIniciales,
   horario: negocio.horario.map((h, i) => ({ indice: i, cerrado: false, ...h })),
 }
+
+const visibles = (tabla) => supabase.from(tabla).select('*').eq('visible', true).order('orden').order('creado_en')
 
 export function ContenidoProvider({ children }) {
   const [datos, setDatos] = useState(local)
@@ -73,26 +90,33 @@ export function ContenidoProvider({ children }) {
 
   const recargar = useCallback(async () => {
     if (!supabase) return
-    const [d, p, h] = await Promise.all([
-      supabase.from('destinos').select('*').eq('visible', true).order('orden').order('creado_en'),
+    const [d, f, g, t, p, h] = await Promise.all([
+      visibles('destinos'),
+      visibles('favoritos'),
+      visibles('viajes_galeria'),
+      visibles('testimonios'),
       supabase.from('promociones').select('*').eq('visible', true).order('creado_en', { ascending: false }),
       supabase.from('horario').select('*').order('dia_idx'),
     ])
-    if (d.error || p.error || h.error) {
-      console.error('No se pudo leer Supabase', d.error || p.error || h.error)
+    const error = [d, f, g, t, p, h].find((r) => r.error)?.error
+    if (error) {
+      console.error('No se pudo leer Supabase', error)
       setFuente('local')
       return
     }
     setDatos({
       destinos: d.data.map(aDestino),
+      favoritos: f.data.map(aFavorito),
+      galeriaViajes: g.data.map(aViaje),
+      testimonios: t.data.map(aTestimonio),
       promociones: p.data.map(aPromo),
       horario: h.data.length === 7 ? h.data.map(aDia) : local.horario,
     })
     setFuente('supabase')
   }, [])
 
-  // La web llama a recargar() cada vez que se abre (ver Web.jsx), así lo que
-  // se acaba de cambiar en el panel se ve al instante.
+  // Las páginas llaman a recargar() al abrirse, así lo que se acaba de
+  // cambiar en el panel /admin se ve al instante.
   return <Ctx.Provider value={{ ...datos, fuente, recargar }}>{children}</Ctx.Provider>
 }
 

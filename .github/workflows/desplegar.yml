@@ -41,10 +41,10 @@ jobs:
         run: |
           npm ci
           npm run build
-          mkdir -p publicar/panel
+          mkdir -p publicar/admin
           cp index.html publicar/index.html
           cp public/robots.txt publicar/robots.txt
-          cp public/panel/index.html publicar/panel/index.html
+          cp public/admin/index.html publicar/admin/index.html
           cp -r pdf publicar/pdf
 
       - name: Subir por FTP
