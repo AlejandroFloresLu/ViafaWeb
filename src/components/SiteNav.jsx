@@ -44,7 +44,7 @@ export function SiteNav() {
     <nav ref={cajaRef} className="sticky top-0 z-30 bg-white text-olive shadow-[0_12px_28px_-6px_rgba(4,4,80,0.8)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 sm:px-8">
         <Link to="/web" aria-label={`${negocio.nombreLargo} · inicio`} className="shrink-0">
-          <img src={logo} alt="Viafa Agencia de Viajes" className="h-[35px] w-auto sm:h-[42px]" />
+          <img src={logo} alt="Viafa Agencia de Viajes" className="h-[28px] w-auto sm:h-[34px]" />
         </Link>
 
         {/* Escritorio */}
